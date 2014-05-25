@@ -2,7 +2,7 @@
 
 #include <glm/glm.hpp>
 #include <PxPhysicsAPI.h>
-#include <vector>
+#include <unordered_map>
 
 class myAllocator: public physx::PxAllocatorCallback {
 public:
@@ -16,8 +16,7 @@ public:
 	}
 };
 
-class PhysXScene
-{
+class PhysXScene {
 public:
 	PhysXScene(void);
 	~PhysXScene(void);	
@@ -29,17 +28,34 @@ public:
 	void AddBox		(char* name, physx::PxActorType::Enum aType, const float& f_density, const glm::vec3& v3_Dimentions						, const glm::vec3& v3_Transform = glm::vec3(0), const physx::PxQuat& px_Quaternion = physx::PxQuat(0,0,0,0), const glm::vec3& v3_Direction = glm::vec3(0), const float& f_Power = 0.0f);
 	void AddSphere	(char* name, physx::PxActorType::Enum aType, const float& f_density, const float& f_Radius								, const glm::vec3& v3_Transform = glm::vec3(0), const physx::PxQuat& px_Quaternion = physx::PxQuat(0,0,0,0), const glm::vec3& v3_Direction = glm::vec3(0), const float& f_Power = 0.0f);
 	void AddCapsule (char* name, physx::PxActorType::Enum aType, const float& f_density, const float& f_Radius, const float& f_HalfHeight	, const glm::vec3& v3_Transform = glm::vec3(0), const physx::PxQuat& px_Quaternion = physx::PxQuat(0,0,0,0), const glm::vec3& v3_Direction = glm::vec3(0), const float& f_Power = 0.0f);
-								 
+	
+	void linkFixed		(physx::PxRigidActor* px_Actor1,physx::PxRigidActor* px_Actor2);
+	void linkDistance	(physx::PxRigidActor* px_Actor1,physx::PxRigidActor* px_Actor2, float f_Lower, float f_Upper, float f_Spring);
+	void linkSherical	(physx::PxRigidActor* px_Actor1,physx::PxRigidActor* px_Actor2, float f_YLimit, float f_Zlimit, float f_ContactDistance);
+	void linkRevolute	(physx::PxRigidActor* px_Actor1,physx::PxRigidActor* px_Actor2, float f_Lower, float f_Upper, float f_ContactDistance);
+	void linkPrismatic	(physx::PxRigidActor* px_Actor1,physx::PxRigidActor* px_Actor2, float f_Lower, float f_Upper, float f_ContactDistance);
+
+	// Get an actor from its Name
 	physx::PxRigidActor* getActor(char* name){
-		for (auto actor : g_PhysXActors) {
-			if (actor->getName() == name){
-				return actor;
-			}
+		long long l = getHash(std::string(name));
+		if (g_PhysXActors.find(l) != g_PhysXActors.end()){
+			return g_PhysXActors[l];
 		}
 	}
 
-	void controlActor(float a_deltaTime, physx::PxRigidActor* actor,float f_Force);
+	void controlActor(float a_deltaTime, const glm::mat4& m_camera, physx::PxRigidActor* actor,float f_Force);
 	void snapActor(physx::PxRigidActor* actor,glm::vec3 v3_Position);
+
+	// Get a hash key from a String key
+	long long getHash(std::string key){
+		long long l = 0;
+		int m = 2;
+		for (auto c : key){
+			l += (long long)(c);
+			l *= m;
+		}
+		return l;
+	}
 
 private:
 	physx::PxFoundation* g_PhysicsFoundation;
@@ -50,6 +66,6 @@ private:
 	physx::PxSimulationFilterShader gDefaultFilterShader;
 	physx::PxMaterial* g_PhysicsMaterial;
 	physx::PxCooking* g_PhysicsCooker;
-	std::vector<physx::PxRigidActor*> g_PhysXActors;
+	std::unordered_map<long long,physx::PxRigidActor*> g_PhysXActors;
 };
 
