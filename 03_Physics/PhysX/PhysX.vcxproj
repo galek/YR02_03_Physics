@@ -76,9 +76,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="PhysX.cpp" />
+    <ClCompile Include="PhysXScene.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PhysX.h" />
+    <ClInclude Include="PhysXScene.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
