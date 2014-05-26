@@ -22,7 +22,7 @@ void drawSphere(physx::PxShape* pShape,physx::PxRigidActor* actor) {
 	position.x = m.getPosition().x;
 	position.y = m.getPosition().y;
 	position.z = m.getPosition().z;
-	glm::vec4 colour = glm::vec4(rand()%1000 / 1000.0f,rand()%1000 / 1000.0f,rand()%1000 / 1000.0f,1);
+	glm::vec4 colour = glm::vec4(rand()%100 / 100.0f,rand()%100 / 100.0f,rand()%100 / 100.0f,1);
 	//create our box gizmo
 	Gizmos::addSphere(position,5,5,radius,colour,&M);
 }
@@ -48,14 +48,14 @@ void drawBox(physx::PxShape* pShape,physx::PxRigidActor* actor) {
 	position.y = m.getPosition().y;
 	position.z = m.getPosition().z;
 	glm::vec3 extents = glm::vec3(width,height,length);
-	glm::vec4 colour = glm::vec4(rand()%1000 / 1000.0f,rand()%1000 / 1000.0f,rand()%1000 / 1000.0f,1);
+	glm::vec4 colour = glm::vec4(rand()%100 / 100.0f,rand()%100 / 100.0f,rand()%100 / 100.0f,1);
 	//create our box gizmo
 	Gizmos::addAABBFilled(position,extents,colour,&M);
 }
 void drawCapsule(physx::PxShape* pShape,physx::PxRigidActor* actor) {
 	//creates a gizmo representation of a capsule using 2 spheres and a cylinder
 
-	glm::vec4 colour(0,0,1,1);  //make our capsule blue
+	glm::vec4 colour(rand()%100 / 100.0f,rand()%100 / 100.0f,rand()%100 / 100.0f,1);  //make our capsule blue
 	physx::PxCapsuleGeometry capsuleGeometry;
 	float radius = 1; //temporary values whilst we try and get the real value from PhysX
 	float halfHeight = 1;
@@ -113,12 +113,13 @@ void drawPlane(physx::PxShape* pShape,physx::PxRigidActor* actor) {
 	position.z = m.getPosition().z;
 
 	glm::vec3 extents = glm::vec3(100,0.1,100);
-	glm::vec4 colour = glm::vec4(rand()%1000 / 1000.0f,rand()%1000 / 1000.0f,rand()%1000 / 1000.0f,1);
+	glm::vec4 colour = glm::vec4(rand()%100 / 100.0f,rand()%100 / 100.0f,rand()%100 / 100.0f,1);
 	//create our box gizmo
 	Gizmos::addAABBFilled(position,extents,colour,&M);
 }
 
-PhysXScene::PhysXScene(){
+PhysXScene::PhysXScene(float f_TicksPerSecond){
+	fTicksPerSecond = f_TicksPerSecond;
 	g_PhysicsFoundation = nullptr;
 	g_Physics = nullptr;
 	g_PhysicsScene = nullptr;
@@ -134,13 +135,13 @@ PhysXScene::PhysXScene(){
 	//create physics material
 	g_PhysicsMaterial = g_Physics->createMaterial(0.5f,0.5f,0.6f);
 	physx::PxSceneDesc sceneDesc(g_Physics->getTolerancesScale());
-	sceneDesc.gravity = physx::PxVec3(0,-30.0f,0);
+	sceneDesc.gravity = physx::PxVec3(0,-9.8f,0);
 	sceneDesc.filterShader = gDefaultFilterShader;
 	sceneDesc.cpuDispatcher = physx::PxDefaultCpuDispatcherCreate(1);
 	g_PhysicsScene = g_Physics->createScene(sceneDesc);
 
 	if(g_PhysicsScene) {
-		printf("start physx scene2\n");
+		printf("Start physx scene.\n");
 	}
 
 	// check if PvdConnection manager is available on this platform
@@ -164,10 +165,9 @@ PhysXScene::~PhysXScene() {
 }
 
 void PhysXScene::update(){
-	g_PhysicsScene->simulate( 1/120.f );
+	g_PhysicsScene->simulate( 1 / fTicksPerSecond );
 	while (g_PhysicsScene->fetchResults() == false) {}
 }
-
 void PhysXScene::draw(){
 	int ran = rand();
 	srand(3);
@@ -194,6 +194,17 @@ void PhysXScene::draw(){
 			}
 		}
 		delete [] shapes;
+	}
+	for (auto joint : g_PhysXJoints) {
+		physx::PxRigidActor *actor1;
+		physx::PxRigidActor *actor2;
+
+		joint.second->getActors(actor1,actor2);
+
+		glm::vec3 pos1 = glm::vec3(actor1->getGlobalPose().p.x,actor1->getGlobalPose().p.y,actor1->getGlobalPose().p.z);
+		glm::vec3 pos2 = glm::vec3(actor2->getGlobalPose().p.x,actor2->getGlobalPose().p.y,actor2->getGlobalPose().p.z);
+
+		Gizmos::addLine(pos1,pos2,glm::vec4(0,0,0,1.0f));
 	}
 	srand(ran);
 }
@@ -222,13 +233,17 @@ void PhysXScene::AddPlane	(char* name, physx::PxActorType::Enum aType, const flo
 	}
 	//add it to the physX scene
 	if (actor != nullptr){
-		g_PhysicsScene->addActor(*actor);
 		long long l = getHash(std::string(name));
-		g_PhysXActors[l] = (actor);
-		actor->setName(name);
+		if (getActor(name) == nullptr){
+			g_PhysicsScene->addActor(*actor);
+			g_PhysXActors[l] = (actor);
+			actor->setName(name);
+		}else{
+			printf("ERROR : %s %i \n",g_PhysXActors[l]->getName(),l);
+			printf("ERROR : %s %i \n",name,l);
+		}
 	}
 }
-
 void PhysXScene::AddBox(char* name, physx::PxActorType::Enum aType, const float& f_density, const glm::vec3& v3_Dimentions	, const glm::vec3& v3_Transform, const physx::PxQuat& px_Quaternion, const glm::vec3& v3_Direction, const float& f_Power){
 	//add a Box
 	physx::PxTransform transform;
@@ -253,13 +268,17 @@ void PhysXScene::AddBox(char* name, physx::PxActorType::Enum aType, const float&
 	}
 	//add it to the physX scene
 	if (actor != nullptr){
-		g_PhysicsScene->addActor(*actor);
 		long long l = getHash(std::string(name));
-		g_PhysXActors[l] = (actor);
-		actor->setName(name);
+		if (getActor(name) == nullptr){
+			g_PhysicsScene->addActor(*actor);
+			g_PhysXActors[l] = (actor);
+			actor->setName(name);
+		}else{
+			printf("ERROR : %s %i \n",g_PhysXActors[l]->getName(),l);
+			printf("ERROR : %s %i \n",name,l);
+		}
 	}
 }
-
 void PhysXScene::AddSphere(char* name, physx::PxActorType::Enum aType, const float& f_density, const float& f_Radius, const glm::vec3& v3_Transform, const physx::PxQuat& px_Quaternion, const glm::vec3& v3_Direction, const float& f_Power){
 	//add a Sphere
 	physx::PxTransform transform;
@@ -284,13 +303,17 @@ void PhysXScene::AddSphere(char* name, physx::PxActorType::Enum aType, const flo
 	}
 	//add it to the physX scene
 	if (actor != nullptr){
-		g_PhysicsScene->addActor(*actor);
 		long long l = getHash(std::string(name));
-		g_PhysXActors[l] = (actor);
-		actor->setName(name);
+		if (getActor(name) == nullptr){
+			g_PhysicsScene->addActor(*actor);
+			g_PhysXActors[l] = (actor);
+			actor->setName(name);
+		}else{
+			printf("ERROR : %s %i \n",g_PhysXActors[l]->getName(),l);
+			printf("ERROR : %s %i \n",name,l);
+		}
 	}
 }
-
 void PhysXScene::AddCapsule (char* name, physx::PxActorType::Enum aType, const float& f_density, const float& f_Radius, const float& f_HalfHeight, const glm::vec3& v3_Transform, const physx::PxQuat& px_Quaternion, const glm::vec3& v3_Direction, const float& f_Power){
 	//add a Capsule
 	physx::PxTransform transform;
@@ -315,49 +338,76 @@ void PhysXScene::AddCapsule (char* name, physx::PxActorType::Enum aType, const f
 	}
 	//add it to the physX scene
 	if (actor != nullptr){
-		g_PhysicsScene->addActor(*actor);
 		long long l = getHash(std::string(name));
-		g_PhysXActors[l] = (actor);
-		actor->setName(name);
+		if (getActor(name) == nullptr){
+			g_PhysicsScene->addActor(*actor);
+			g_PhysXActors[l] = (actor);
+			actor->setName(name);
+		}else{
+			printf("ERROR : %s %i \n",g_PhysXActors[l]->getName(),l);
+			printf("ERROR : %s %i \n",name,l);
+		}
 	}
 }
 
-void PhysXScene::linkFixed(physx::PxRigidActor* px_Actor1,physx::PxRigidActor* px_Actor2){
+void PhysXScene::linkFixed(physx::PxRigidActor* px_Actor1, physx::PxTransform pxt_Transform1, physx::PxRigidActor* px_Actor2 , physx::PxTransform pxt_Transform2){
 	if (px_Actor1 == nullptr || px_Actor2 == nullptr){return;}
 	if (px_Actor1 == px_Actor2){return;}
-	physx::PxFixedJoint *joint = PxFixedJointCreate(*g_Physics, px_Actor1, physx::PxTransform(physx::PxVec3(0,0,0)), px_Actor2, physx::PxTransform(physx::PxVec3(0,0,0)));
+	physx::PxFixedJoint *joint = PxFixedJointCreate(*g_Physics, px_Actor1, pxt_Transform1, px_Actor2, pxt_Transform2);
+	std::string name = px_Actor1->getName();
+	name.append(px_Actor2->getName());
+	long long l = getHash(name);
+	g_PhysXJoints[l] = joint;
 }
-void PhysXScene::linkDistance(physx::PxRigidActor* px_Actor1,physx::PxRigidActor* px_Actor2, float f_Min, float f_Max, float f_Spring){
-	if (px_Actor1 == nullptr || px_Actor2 == nullptr){return;}
+void PhysXScene::linkDistance(physx::PxRigidActor* px_Actor1, physx::PxTransform pxt_Transform1, physx::PxRigidActor* px_Actor2 , physx::PxTransform pxt_Transform2, float f_Min, float f_Max, float f_Spring){
+	if (px_Actor1 == nullptr || px_Actor2 == nullptr){
+		return;
+	}
 	if (px_Actor1 == px_Actor2){return;}
-	physx::PxDistanceJoint *joint = PxDistanceJointCreate(*g_Physics, px_Actor1, physx::PxTransform(physx::PxVec3(0,0,0)), px_Actor2, physx::PxTransform(physx::PxVec3(0,0,0)));
+	physx::PxDistanceJoint *joint = PxDistanceJointCreate(*g_Physics, px_Actor1, pxt_Transform1, px_Actor2, pxt_Transform2);
 	joint->setMaxDistance(f_Max);
 	joint->setDistanceJointFlag(physx::PxDistanceJointFlag::eMAX_DISTANCE_ENABLED, true);
 	joint->setMinDistance(f_Min);
 	joint->setDistanceJointFlag(physx::PxDistanceJointFlag::eMIN_DISTANCE_ENABLED, true);
 	joint->setSpring(f_Spring);
 	joint->setDistanceJointFlag(physx::PxDistanceJointFlag::eSPRING_ENABLED, true);
+	std::string name = px_Actor1->getName();
+	name.append(px_Actor2->getName());
+	long long l = getHash(name);
+	g_PhysXJoints[l] = joint;
 }
-void PhysXScene::linkSherical(physx::PxRigidActor* px_Actor1,physx::PxRigidActor* px_Actor2, float f_YLimit, float f_Zlimit, float f_ContactDistance){
+void PhysXScene::linkSherical(physx::PxRigidActor* px_Actor1, physx::PxTransform pxt_Transform1, physx::PxRigidActor* px_Actor2 , physx::PxTransform pxt_Transform2, float f_YLimit, float f_Zlimit, float f_ContactDistance){
 	if (px_Actor1 == nullptr || px_Actor2 == nullptr){return;}
 	if (px_Actor1 == px_Actor2){return;}
-	physx::PxSphericalJoint *joint = PxSphericalJointCreate(*g_Physics, px_Actor1, physx::PxTransform(physx::PxVec3(0,0,0)), px_Actor2, physx::PxTransform(physx::PxVec3(0,0,0)));
+	physx::PxSphericalJoint *joint = PxSphericalJointCreate(*g_Physics, px_Actor1, pxt_Transform1, px_Actor2, pxt_Transform2);
 	joint->setLimitCone(physx::PxJointLimitCone(f_YLimit,f_Zlimit,f_ContactDistance));
 	joint->setSphericalJointFlag(physx::PxSphericalJointFlag::eLIMIT_ENABLED, true);
+	std::string name = px_Actor1->getName();
+	name.append(px_Actor2->getName());
+	long long l = getHash(name);
+	g_PhysXJoints[l] = joint;
 }
-void PhysXScene::linkRevolute(physx::PxRigidActor* px_Actor1,physx::PxRigidActor* px_Actor2, float f_Lower, float f_Upper, float f_ContactDistance){
+void PhysXScene::linkRevolute(physx::PxRigidActor* px_Actor1, physx::PxTransform pxt_Transform1, physx::PxRigidActor* px_Actor2 , physx::PxTransform pxt_Transform2, float f_Lower, float f_Upper, float f_ContactDistance){
 	if (px_Actor1 == nullptr || px_Actor2 == nullptr){return;}
 	if (px_Actor1 == px_Actor2){return;}
-	physx::PxRevoluteJoint *joint = PxRevoluteJointCreate(*g_Physics, px_Actor1, physx::PxTransform(physx::PxVec3(0,0,0)), px_Actor2, physx::PxTransform(physx::PxVec3(0,0,0)));
+	physx::PxRevoluteJoint *joint = PxRevoluteJointCreate(*g_Physics, px_Actor1, pxt_Transform1, px_Actor2, pxt_Transform2);
 	joint->setLimit(physx::PxJointLimitPair(f_Lower,f_Upper,f_ContactDistance));
 	joint->setRevoluteJointFlag(physx::PxRevoluteJointFlag::eLIMIT_ENABLED, true);
+	std::string name = px_Actor1->getName();
+	name.append(px_Actor2->getName());
+	long long l = getHash(name);
+	g_PhysXJoints[l] = joint;
 }
-void PhysXScene::linkPrismatic(physx::PxRigidActor* px_Actor1,physx::PxRigidActor* px_Actor2, float f_Lower, float f_Upper, float f_ContactDistance){
+void PhysXScene::linkPrismatic(physx::PxRigidActor* px_Actor1, physx::PxTransform pxt_Transform1, physx::PxRigidActor* px_Actor2 , physx::PxTransform pxt_Transform2, float f_Lower, float f_Upper, float f_ContactDistance){
 	if (px_Actor1 == nullptr || px_Actor2 == nullptr){return;}
 	if (px_Actor1 == px_Actor2){return;}
-	physx::PxPrismaticJoint *joint = PxPrismaticJointCreate(*g_Physics, px_Actor1, physx::PxTransform(physx::PxVec3(0,0,0)), px_Actor2, physx::PxTransform(physx::PxVec3(0,0,0)));
+	physx::PxPrismaticJoint *joint = PxPrismaticJointCreate(*g_Physics, px_Actor1, pxt_Transform1, px_Actor2, pxt_Transform2);
 	joint->setLimit(physx::PxJointLimitPair(f_Lower,f_Upper,f_ContactDistance));
 	joint->setPrismaticJointFlag(physx::PxPrismaticJointFlag::eLIMIT_ENABLED, true);
+	std::string name = px_Actor1->getName();
+	name.append(px_Actor2->getName());
+	long long l = getHash(name);
+	g_PhysXJoints[l] = joint;
 }
 
 void PhysXScene::controlActor(float a_deltaTime, const glm::mat4& m_camera, physx::PxRigidActor* actor, float f_Force){
@@ -387,7 +437,6 @@ void PhysXScene::controlActor(float a_deltaTime, const glm::mat4& m_camera, phys
 		Actor->addForce((physx::PxVec3(vRight.x * -10,0,vRight.z * -10) * Actor->getMass() *  f_Force) * a_deltaTime);
 	}
 }
-
 void PhysXScene::snapActor(physx::PxRigidActor* actor,glm::vec3 v3_Position){
 	if (actor == nullptr){
 		return;
