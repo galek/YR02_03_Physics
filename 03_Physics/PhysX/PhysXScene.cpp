@@ -209,7 +209,7 @@ void PhysXScene::draw(){
 	srand(ran);
 }
 
-void PhysXScene::AddPlane	(char* name, physx::PxActorType::Enum aType, const float& f_density, const glm::vec3& v3_Transform, const physx::PxQuat& px_Quaternion, const glm::vec3& v3_Direction, const float& f_Power){
+void PhysXScene::AddPlane(char* name, physx::PxActorType::Enum aType, const float& f_density, const glm::vec3& v3_Transform, const physx::PxQuat& px_Quaternion, const glm::vec3& v3_Direction, const float& f_Power){
 	//add a plane
 	physx::PxTransform transform;
 	if (px_Quaternion.isSane()){
@@ -233,7 +233,7 @@ void PhysXScene::AddPlane	(char* name, physx::PxActorType::Enum aType, const flo
 	}
 	//add it to the physX scene
 	if (actor != nullptr){
-		long long l = getHash(std::string(name));
+		unsigned long long l = getHash(std::string(name));
 		if (getActor(name) == nullptr){
 			g_PhysicsScene->addActor(*actor);
 			g_PhysXActors[l] = (actor);
@@ -268,8 +268,8 @@ void PhysXScene::AddBox(char* name, physx::PxActorType::Enum aType, const float&
 	}
 	//add it to the physX scene
 	if (actor != nullptr){
-		long long l = getHash(std::string(name));
-		if (getActor(name) == nullptr){
+		unsigned long long l = getHash(std::string(name));
+		if (getActor(l) == nullptr){
 			g_PhysicsScene->addActor(*actor);
 			g_PhysXActors[l] = (actor);
 			actor->setName(name);
@@ -303,7 +303,7 @@ void PhysXScene::AddSphere(char* name, physx::PxActorType::Enum aType, const flo
 	}
 	//add it to the physX scene
 	if (actor != nullptr){
-		long long l = getHash(std::string(name));
+		unsigned long long l = getHash(std::string(name));
 		if (getActor(name) == nullptr){
 			g_PhysicsScene->addActor(*actor);
 			g_PhysXActors[l] = (actor);
@@ -338,7 +338,7 @@ void PhysXScene::AddCapsule (char* name, physx::PxActorType::Enum aType, const f
 	}
 	//add it to the physX scene
 	if (actor != nullptr){
-		long long l = getHash(std::string(name));
+		unsigned long long l = getHash(std::string(name));
 		if (getActor(name) == nullptr){
 			g_PhysicsScene->addActor(*actor);
 			g_PhysXActors[l] = (actor);
@@ -359,7 +359,7 @@ void PhysXScene::linkFixed(physx::PxRigidActor* px_Actor1, physx::PxTransform px
 	long long l = getHash(name);
 	g_PhysXJoints[l] = joint;
 }
-void PhysXScene::linkDistance(physx::PxRigidActor* px_Actor1, physx::PxTransform pxt_Transform1, physx::PxRigidActor* px_Actor2 , physx::PxTransform pxt_Transform2, float f_Min, float f_Max, float f_Spring){
+void PhysXScene::linkDistance(physx::PxRigidActor* px_Actor1, physx::PxTransform pxt_Transform1, physx::PxRigidActor* px_Actor2 , physx::PxTransform pxt_Transform2, float f_Min, float f_Max, float f_Spring, float f_Damping){
 	if (px_Actor1 == nullptr || px_Actor2 == nullptr){
 		return;
 	}
@@ -369,8 +369,11 @@ void PhysXScene::linkDistance(physx::PxRigidActor* px_Actor1, physx::PxTransform
 	joint->setDistanceJointFlag(physx::PxDistanceJointFlag::eMAX_DISTANCE_ENABLED, true);
 	joint->setMinDistance(f_Min);
 	joint->setDistanceJointFlag(physx::PxDistanceJointFlag::eMIN_DISTANCE_ENABLED, true);
-	joint->setSpring(f_Spring);
-	joint->setDistanceJointFlag(physx::PxDistanceJointFlag::eSPRING_ENABLED, true);
+	if (f_Spring != 0.0f){
+		joint->setSpring(f_Spring);
+		joint->setDamping(f_Damping);
+		joint->setDistanceJointFlag(physx::PxDistanceJointFlag::eSPRING_ENABLED, true);
+	}
 	std::string name = px_Actor1->getName();
 	name.append(px_Actor2->getName());
 	long long l = getHash(name);
@@ -438,13 +441,8 @@ void PhysXScene::controlActor(float a_deltaTime, const glm::mat4& m_camera, phys
 	}
 }
 void PhysXScene::snapActor(physx::PxRigidActor* actor,glm::vec3 v3_Position){
-	if (actor == nullptr){
-		return;
-	}
-
-	if (actor->getType() != physx::PxActorType::eRIGID_DYNAMIC){
-		return;
-	}
+	if (actor == nullptr){return;}
+	if (actor->getType() != physx::PxActorType::eRIGID_DYNAMIC){return;}
 	physx::PxRigidDynamic *Actor = (physx::PxRigidDynamic*)actor;
 	physx::PxTransform pose = Actor->getGlobalPose();
 	pose.p = physx::PxVec3(v3_Position.x,v3_Position.y,v3_Position.z);
