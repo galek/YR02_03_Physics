@@ -3,8 +3,6 @@
 
 #include "Application.h"
 #include <glm/glm.hpp>
-#include <Shader.h>
-#include "VertexBatch.hpp"
 
 // Derived application class that wraps up all globals neatly
 class PhysicsDIY : public Application
@@ -25,9 +23,6 @@ protected:
 	glm::mat4	m_projectionMatrix;
 	
 	//!--TUTORIAL
-
-	Shader *sScene;
-	Osiris::VertexBatch *vb;
 
 	//!--TUTORIAL
 };

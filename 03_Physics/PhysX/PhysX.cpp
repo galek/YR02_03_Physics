@@ -8,10 +8,35 @@
 #define DEFAULT_SCREENWIDTH 1280
 #define DEFAULT_SCREENHEIGHT 720
 
+RagdollNode* HumanRagdoll[21] = {
+	new RagdollNode(physx::PxQuat(physx::PxPi/2.0f,Z_AXIS)		,-1, 1.0f, 3.0f	, 1.0f , 1.0f, "lowerSpine"),
+	new RagdollNode(physx::PxQuat(physx::PxPi,Z_AXIS)			, 0, 1.0f, 1.0f	,-1.0f , 1.0f, "leftPelvis"),
+	new RagdollNode(physx::PxQuat(0,Z_AXIS)						, 0, 1.0f, 1.0f	,-1.0f , 1.0f, "rightPelvis"),
+	new RagdollNode(physx::PxQuat(physx::PxPi/2.0f+0.2f,Z_AXIS)	, 1, 5.0f, 2.0f	,-1.0f , 1.0f, "leftUpperLeg"),
+	new RagdollNode(physx::PxQuat(physx::PxPi/2.0f-0.2f,Z_AXIS)	, 2, 5.0f, 2.0f ,-1.0f , 1.0f, "right upperLeg"),
+	new RagdollNode(physx::PxQuat(physx::PxPi/2.0f+0.2f,Z_AXIS)	, 3, 5.0f, 1.75f,-1.0f , 1.0f, "leftLowerLeg"),
+	new RagdollNode(physx::PxQuat(physx::PxPi/2.0f-0.2f,Z_AXIS)	, 4, 5.0f, 1.75f,-1.0f , 1.0f, "rightLowerLeg"),
+	new RagdollNode(physx::PxQuat(physx::PxPi/2.0f,Y_AXIS)		, 5, 1.5f, 1.5f	,-1.0f , 1.0f, "leftFoot"),
+	new RagdollNode(physx::PxQuat(physx::PxPi/2.0f,Y_AXIS)		, 6, 1.5f, 1.5f	,-1.0f , 1.0f, "rightFoot"),
+	new RagdollNode(physx::PxQuat(physx::PxPi/2.0f,Z_AXIS)		, 0, 1.0f, 3.0f , 1.0f ,-1.0f, "upperSpine"),
+	new RagdollNode(physx::PxQuat(physx::PxPi,Z_AXIS)			, 9, 1.0f, 1.5f , 1.0f , 1.0f, "leftClavicle"),
+	new RagdollNode(physx::PxQuat(0,Z_AXIS)						, 9, 1.0f, 1.5f , 1.0f , 1.0f, "rightClavicle"),
+	new RagdollNode(physx::PxQuat(physx::PxPi/2.0f,Z_AXIS)		, 9, 1.0f, 1.0f , 1.0f ,-1.0f, "neck"),
+	new RagdollNode(physx::PxQuat(physx::PxPi/2.0f,Z_AXIS)		,12, 1.0f, 3.0f , 1.0f ,-1.0f, "head"),
+	new RagdollNode(physx::PxQuat(physx::PxPi-.3,Z_AXIS)		,10, 3.0f, 1.5f ,-1.0f , 1.0f, "leftUpperArm"),
+	new RagdollNode(physx::PxQuat(0.3,Z_AXIS)					,11, 3.0f, 1.5f ,-1.0f , 1.0f, "rightUpperArm"),
+	new RagdollNode(physx::PxQuat(physx::PxPi-.3,Z_AXIS)		,14, 3.0f, 1.0f ,-1.0f , 1.0f, "leftLowerArm"),
+	new RagdollNode(physx::PxQuat(0.3,Z_AXIS)					,15, 3.0f, 1.0f ,-1.0f , 1.0f, "rightLowerArm"),
+	new RagdollNode(physx::PxQuat(physx::PxPi-.3,Z_AXIS)		,16, 1.0f, 1.5f ,-1.0f , 1.0f, "leftHand"),
+	new RagdollNode(physx::PxQuat(0.3,Z_AXIS)					,17, 1.0f, 1.5f ,-1.0f , 1.0f, "rightHand"),
+	NULL
+};
+
 PhysX::PhysX(){}
 PhysX::~PhysX(){}
 
 bool PhysX::onCreate(int a_argc, char* a_argv[]) {
+
 	Gizmos::create(SHRT_MAX * 2,SHRT_MAX * 2);
 	m_cameraMatrix = glm::inverse( glm::lookAt(glm::vec3(0,10,0),glm::vec3(-50,10,-50), glm::vec3(0,1,0)) );
 	m_projectionMatrix = glm::perspective(glm::pi<float>() * 0.25f, DEFAULT_SCREENWIDTH/(float)DEFAULT_SCREENHEIGHT, 0.1f, 1000.0f);
@@ -19,7 +44,7 @@ bool PhysX::onCreate(int a_argc, char* a_argv[]) {
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 	
-	m_Scene = new PhysXScene(60);
+	m_Scene = new PhysXScene(60,16);
 
 	// Player
 	{
@@ -35,6 +60,11 @@ bool PhysX::onCreate(int a_argc, char* a_argv[]) {
 		m_Scene->AddBox("xNeg",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(1,50,100),glm::vec3(-100,50,0));
 		m_Scene->AddBox("zPos",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(100,50,1),glm::vec3(0,50, 100));
 		m_Scene->AddBox("zNeg",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(100,50,1),glm::vec3(0,50,-100));
+	}
+
+	// Ragdoll
+	{
+		m_Scene->AddRagdoll("Player",HumanRagdoll,physx::PxTransform(physx::PxVec3(0,10.0f,0)),0.1f);
 	}
 
 	// Parkour Ground

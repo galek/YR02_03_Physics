@@ -118,7 +118,7 @@ void drawPlane(physx::PxShape* pShape,physx::PxRigidActor* actor) {
 	Gizmos::addAABBFilled(position,extents,colour,&M);
 }
 
-PhysXScene::PhysXScene(float f_TicksPerSecond){
+PhysXScene::PhysXScene(float f_TicksPerSecond,int i_ThreadCount){
 	fTicksPerSecond = f_TicksPerSecond;
 	g_PhysicsFoundation = nullptr;
 	g_Physics = nullptr;
@@ -137,7 +137,7 @@ PhysXScene::PhysXScene(float f_TicksPerSecond){
 	physx::PxSceneDesc sceneDesc(g_Physics->getTolerancesScale());
 	sceneDesc.gravity = physx::PxVec3(0,-9.8f,0);
 	sceneDesc.filterShader = gDefaultFilterShader;
-	sceneDesc.cpuDispatcher = physx::PxDefaultCpuDispatcherCreate(1);
+	sceneDesc.cpuDispatcher = physx::PxDefaultCpuDispatcherCreate(i_ThreadCount);
 	g_PhysicsScene = g_Physics->createScene(sceneDesc);
 
 	if(g_PhysicsScene) {
@@ -171,11 +171,11 @@ void PhysXScene::update(){
 void PhysXScene::draw(){
 	int ran = rand();
 	srand(3);
+	// draw all our actors
 	for (auto actor : g_PhysXActors) {
 		physx::PxU32 nShapes = actor.second->getNbShapes();
 		physx::PxShape** shapes = new physx::PxShape*[nShapes];
 		actor.second->getShapes(shapes, nShapes);
-		// Render all the shapes in the physx actor (for early tutorials there is just one)
 		while (nShapes--) {
 			physx::PxGeometryType::Enum type = shapes[nShapes]->getGeometryType();
 			switch(type){
@@ -195,6 +195,39 @@ void PhysXScene::draw(){
 		}
 		delete [] shapes;
 	}
+	// all our ragdolls
+	for(auto articulation : g_PhysXActorsRagDolls) {
+		physx::PxU32 nLinks = articulation.second->getNbLinks();
+		physx::PxArticulationLink** links = new physx::PxArticulationLink*[nLinks];
+		articulation.second->getLinks(links, nLinks);
+		while (nLinks--)
+		{
+			physx::PxArticulationLink* link = links[nLinks];
+			physx::PxU32 nShapes = link->getNbShapes();
+			physx::PxShape** shapes = new physx::PxShape*[nShapes];
+			link->getShapes(shapes, nShapes);
+			while (nShapes--)
+			{
+			physx::PxGeometryType::Enum type = shapes[nShapes]->getGeometryType();
+				switch(type){
+				case physx::PxGeometryType::eBOX:
+					drawBox(shapes[nShapes],link);
+					break;
+				case physx::PxGeometryType::eSPHERE:
+					drawSphere(shapes[nShapes],link);
+					break;
+				case physx::PxGeometryType::eCAPSULE:
+					drawCapsule(shapes[nShapes],link);
+					break;
+				case physx::PxGeometryType::ePLANE:
+					drawPlane(shapes[nShapes],link);
+					break;
+				}
+			}
+		}
+		delete [] links;
+	}
+	// all our joints
 	for (auto joint : g_PhysXJoints) {
 		physx::PxRigidActor *actor1;
 		physx::PxRigidActor *actor2;
@@ -204,8 +237,13 @@ void PhysXScene::draw(){
 		glm::vec3 pos1 = glm::vec3(actor1->getGlobalPose().p.x,actor1->getGlobalPose().p.y,actor1->getGlobalPose().p.z);
 		glm::vec3 pos2 = glm::vec3(actor2->getGlobalPose().p.x,actor2->getGlobalPose().p.y,actor2->getGlobalPose().p.z);
 
-		Gizmos::addLine(pos1,pos2,glm::vec4(0,0,0,1.0f));
+		Gizmos::addLine(pos1,pos2,glm::vec4(1.0f));
 	}
+	// and all our particles
+	for (auto system : g_PhysXParticles) {
+		// do particle stuff
+	}
+
 	srand(ran);
 }
 
@@ -348,6 +386,85 @@ void PhysXScene::AddCapsule (char* name, physx::PxActorType::Enum aType, const f
 			printf("ERROR : %s %i \n",name,l);
 		}
 	}
+}
+void PhysXScene::AddRagdoll(char* name, RagdollNode** nodeArray, physx::PxTransform worldPos, float scaleFactor){
+	physx::PxArticulation* ragDollArticulation = g_Physics->createArticulation();
+	physx::PxMaterial* ragdollMaterial = g_Physics->createMaterial(0.4f,0.4f,1.0f);
+	RagdollNode** currentNode = nodeArray;
+
+	while(*currentNode != NULL) {
+		RagdollNode* currentNodePtr = *currentNode;
+		RagdollNode* parentNode;
+
+		float radius = currentNodePtr->radius * scaleFactor;
+		float halfLength = currentNodePtr->halfLength * scaleFactor;
+		float childHalfLength = radius + halfLength;
+		float parentHalfLength;
+
+		int parentIdx = currentNodePtr->parentNodeIdx;
+		physx::PxArticulationLink* parentLinkPtr = NULL;
+		currentNodePtr->scaledGobalPos = worldPos.p;
+		if(parentIdx!= -1) {
+			parentNode = *(nodeArray + parentIdx);
+			parentLinkPtr = parentNode->linkPtr;
+			parentHalfLength = (parentNode->radius + parentNode->halfLength) * scaleFactor;
+
+			physx::PxVec3 currentRelative = currentNodePtr->childLinkPos * currentNodePtr->globalRotation.rotate(physx::PxVec3(childHalfLength,0,0));
+			physx::PxVec3 parentRelative = - currentNodePtr->parentLinkPos * parentNode->globalRotation.rotate(physx::PxVec3(parentHalfLength,0,0));
+			currentNodePtr->scaledGobalPos = parentNode->scaledGobalPos- (parentRelative + currentRelative);
+		}
+
+		physx::PxTransform linkTransform = physx::PxTransform(currentNodePtr->scaledGobalPos,currentNodePtr->globalRotation) ;
+		physx::PxArticulationLink* link = ragDollArticulation->createLink(parentLinkPtr, linkTransform);
+
+		std::string partname = name;
+		partname.append("_");
+		partname.append(currentNodePtr->name);
+		link->setName(partname.c_str());
+
+		currentNodePtr->linkPtr = link;
+		float jointSpace = .01f;
+		float capsuleHalfLength = (halfLength>jointSpace?halfLength-jointSpace:0)+.01f; 
+		physx::PxCapsuleGeometry capsule(radius,capsuleHalfLength);
+		link->createShape(capsule,*ragdollMaterial);
+		physx::PxRigidBodyExt::updateMassAndInertia(*link, 50.0f);
+
+		if(parentIdx!= -1) {
+			physx::PxArticulationJoint *joint = link->getInboundJoint();
+			physx::PxQuat frameRotation = parentNode->globalRotation.getConjugate() * currentNodePtr->globalRotation;
+			physx::PxTransform parentConstraintFrame = physx::PxTransform(physx::PxVec3(currentNodePtr->parentLinkPos * parentHalfLength,0,0),frameRotation);
+			physx::PxTransform thisConstraintFrame = physx::PxTransform(physx::PxVec3(currentNodePtr->childLinkPos * childHalfLength,0,0));
+			joint->setParentPose(parentConstraintFrame);
+			joint->setChildPose(thisConstraintFrame);
+
+			joint->setSpring(20);
+			joint->setDamping(100);
+			joint->setSwingLimitEnabled(true);
+			joint->setSwingLimit(0.4f,0.4f);
+			joint->setTwistLimit(.4f,.4f);
+			joint->setTwistLimitEnabled(true);
+		}
+		currentNode++;
+	}
+
+	ragDollArticulation->putToSleep();
+	g_PhysicsScene->addArticulation(*ragDollArticulation);
+
+	long long l = getHash(name);
+	g_PhysXActorsRagDolls[l] = ragDollArticulation;
+}
+void PhysXScene::AddParticleSystem(char* name,int i_MaxParticles, bool b_Fluid) {
+	physx::PxParticleBase* ps;
+	if (b_Fluid){
+		ps = g_Physics->createParticleFluid(i_MaxParticles);
+	}else{
+		ps = g_Physics->createParticleSystem(i_MaxParticles);
+	}
+	ps->setName(name);
+	g_PhysicsScene->addActor(*ps);
+
+	long long l = getHash(name);
+	g_PhysXParticles[l] = ps;
 }
 
 void PhysXScene::linkFixed(physx::PxRigidActor* px_Actor1, physx::PxTransform pxt_Transform1, physx::PxRigidActor* px_Actor2 , physx::PxTransform pxt_Transform2){

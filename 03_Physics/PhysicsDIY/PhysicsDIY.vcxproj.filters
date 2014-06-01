@@ -23,8 +23,5 @@
     <ClInclude Include="PhysicsDIY.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="VertexBatch.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
 </Project>
