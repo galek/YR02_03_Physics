@@ -149,6 +149,14 @@ public:
 		return hash;
 	}
 
+	physx::PxScene* scene(){
+		return g_PhysicsScene;
+	}
+
+	physx::PxPhysics* physics(){
+		return g_Physics;
+	}
+
 private:
 	float fTicksPerSecond;
 	physx::PxFoundation* g_PhysicsFoundation;

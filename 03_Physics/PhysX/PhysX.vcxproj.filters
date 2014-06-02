@@ -21,12 +21,24 @@
     <ClCompile Include="PhysXScene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ParticleFluidEmmiter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ParticleEmmiter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PhysX.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="PhysXScene.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ParticleEmmiter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ParticleFluidEmmiter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

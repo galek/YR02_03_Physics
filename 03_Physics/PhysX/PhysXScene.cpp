@@ -153,7 +153,7 @@ void drawPlane(physx::PxShape* pShape,physx::PxRigidActor* actor) {
 	position.y = m.getPosition().y;
 	position.z = m.getPosition().z;
 
-	glm::vec3 extents = glm::vec3(100,0.1,100);
+	glm::vec3 extents = glm::vec3(100,0.0001f,100);
 	glm::vec4 colour = glm::vec4(rand()%100 / 100.0f,rand()%100 / 100.0f,rand()%100 / 100.0f,1);
 	//create our box gizmo
 	Gizmos::addAABBFilled(position,extents,colour,&M);
@@ -210,6 +210,7 @@ PhysXScene::~PhysXScene() {
 
 void PhysXScene::update(){
 	g_PhysicsScene->simulate( 1 / fTicksPerSecond );
+	//g_PhysicsScene->fetchResults();
 	while (g_PhysicsScene->fetchResults() == false) {}
 }
 void PhysXScene::draw(){
@@ -604,7 +605,9 @@ void PhysXScene::controlActor(float a_deltaTime, const glm::mat4& m_camera, phys
 
 	GLFWwindow *window = glfwGetCurrentContext();
 	if (glfwGetKey(window,GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS){
-		((physx::PxRigidDynamic*)Actor)->setLinearVelocity(physx::PxVec3(0),true);
+		Actor->addForce((physx::PxVec3(0,10,0) * Actor->getMass() * f_Force) * a_deltaTime);
+	}else if (glfwGetKey(window,GLFW_KEY_RIGHT_ALT) == GLFW_PRESS){
+		Actor->setLinearVelocity(physx::PxVec3(0),false);
 	}
 	if (glfwGetKey(window,GLFW_KEY_UP) == GLFW_PRESS){
 		Actor->addForce((physx::PxVec3(vForward.x * -10,0,vForward.z * -10) * Actor->getMass() * f_Force) * a_deltaTime);

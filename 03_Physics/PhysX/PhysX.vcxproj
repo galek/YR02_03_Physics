@@ -75,10 +75,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ParticleEmmiter.cpp" />
+    <ClCompile Include="ParticleFluidEmmiter.cpp" />
     <ClCompile Include="PhysX.cpp" />
     <ClCompile Include="PhysXScene.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ParticleEmmiter.h" />
+    <ClInclude Include="ParticleFluidEmmiter.h" />
     <ClInclude Include="PhysX.h" />
     <ClInclude Include="PhysXScene.hpp" />
   </ItemGroup>

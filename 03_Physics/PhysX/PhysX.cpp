@@ -7,6 +7,7 @@
 
 #define DEFAULT_SCREENWIDTH 1280
 #define DEFAULT_SCREENHEIGHT 720
+#define TIMESTEP 60.0f
 
 RagdollNode* HumanRagdoll[21] = {
 	new RagdollNode(physx::PxQuat(physx::PxPi/2.0f,Z_AXIS)		,-1, 0.5f, 3.0f	, 1.0f , 1.0f, "lowerSpine"),
@@ -44,7 +45,7 @@ bool PhysX::onCreate(int a_argc, char* a_argv[]) {
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 	
-	m_Scene = new PhysXScene(60,8);
+	m_Scene = new PhysXScene(TIMESTEP,8);
 
 	// Outer Walls
 	{
@@ -59,12 +60,7 @@ bool PhysX::onCreate(int a_argc, char* a_argv[]) {
 
 	// Ragdoll
 	{
-		for (int x = 0; x < 9; x++){
-			std::string NPC = "NPC";
-			char buffer[32];
-			sprintf(buffer,"[%i]",(int)(x));NPC.append(buffer);
-			m_Scene->AddRagdoll((char*)NPC.c_str(),HumanRagdoll,physx::PxTransform(physx::PxVec3( x * 6.0f ,3.0f,0 * 5.0f)),0.1f);
-		}
+		m_Scene->AddRagdoll("Ragdoll1",HumanRagdoll,physx::PxTransform(physx::PxVec3( 6.0f ,3.0f, 0.0f)),0.1f);
 	}
 
 	// Playground
@@ -72,21 +68,59 @@ bool PhysX::onCreate(int a_argc, char* a_argv[]) {
 		m_Scene->AddCapsule("PlayerBody",physx::PxActorType::Enum::eRIGID_DYNAMIC,10,1,2,glm::vec3(50,4,-50));
 		m_Scene->AddBox("Playground1",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3( 5,1,5),glm::vec3(60.8f,6.7,-60));
 		m_Scene->AddBox("Playground2",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(10,1,3),glm::vec3(47,3,-60),physx::PxQuat(glm::half_pi<float>() / 4,physx::PxVec3(0,0,1)));
-		m_Scene->AddBox("Playground3",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(10,1,6),glm::vec3(-18,3,-50),physx::PxQuat(-glm::half_pi<float>() / 4,physx::PxVec3(0,0,1)));
 	}
 
 	// Water
 	{
-		ACTOR a = m_Scene->AddBox("WaterPad1",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(2,0.5,2),glm::vec3(-75,0.25,45));
+		float wx = -50;
+		float wz = 50;
+
+		ACTOR a = m_Scene->AddBox("WaterPad1",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(2,0.5,2),glm::vec3(wx,0.25,wz));
 		m_Scene->createTrigger(a);
 
-		m_Scene->AddBox("WaterWall1",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(1,4,25),glm::vec3(-50,2,75));
-		m_Scene->AddBox("WaterWall2",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(25,4,1),glm::vec3(-75,2,50));
-		m_Scene->AddBox("WaterSpout",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(5,50,5),glm::vec3(-75,75,75));
-		m_Scene->AddBox("WaterTapa1",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(1,1,2),glm::vec3(-75,30,68));
-		m_Scene->AddBox("WaterTapa2",physx::PxActorType::Enum::eRIGID_DYNAMIC,10,glm::vec3(5,5,1),glm::vec3(-75,30,65));
-		physx::PxD6Joint *j = (physx::PxD6Joint*)m_Scene->linkD6(m_Scene->getActor("WaterTapa2"),physx::PxTransform(physx::PxVec3(0,0,0)),m_Scene->getActor("WaterTapa1"),physx::PxTransform(physx::PxVec3(0,0,0)));
-		j->setMotion(physx::PxD6Axis::eSWING2,physx::PxD6Motion::eFREE);
+		m_Scene->AddBox("WaterWall1",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(10,4, 1),glm::vec3(wx     ,2,wz + 10));
+		m_Scene->AddBox("WaterWall2",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(10,4, 1),glm::vec3(wx     ,2,wz - 10));
+		m_Scene->AddBox("WaterWall3",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3( 1,4,10),glm::vec3(wx + 10,2,wz     ));
+		m_Scene->AddBox("WaterWall4",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3( 1,4,10),glm::vec3(wx - 10,2,wz     ));
+
+		PxParticleFluid* pf;
+		// create particle system in PhysX SDK
+		// set immutable properties.
+		PxU32 maxParticles = 5000;
+		bool perParticleRestOffset = false;
+		pf = m_Scene->physics()->createParticleFluid(maxParticles, perParticleRestOffset);
+		pf->setRestParticleDistance(1.0f);
+		pf->setDynamicFriction(0.1f);
+		pf->setStaticFriction(0.1f);
+		pf->setContactOffset(2.0f);
+		pf->setDamping(0.1f);
+		pf->setParticleMass(1.0f);
+		pf->setRestitution(0.0f);
+		pf->setParticleReadDataFlag(PxParticleReadDataFlag::eDENSITY_BUFFER,true);
+		pf->setParticleBaseFlag(PxParticleBaseFlag::eCOLLISION_TWOWAY,true);
+		if (pf) {
+			m_Scene->scene()->addActor(*pf);
+			particleFluidEmitter = new ParticleFluidEmitter(maxParticles,PxVec3(wx,2,wz),pf,0.001f);
+		}
+
+		maxParticles = 4000;
+		perParticleRestOffset = false;
+		PxParticleSystem* ps;
+		// create particle system in PhysX SDK
+		ps = m_Scene->physics()->createParticleSystem(maxParticles, perParticleRestOffset);
+		//various flags we can set/clear to get different effects
+		//  ps->setParticleBaseFlag(PxParticleBaseFlag::eCOLLISION_TWOWAY,true);
+		//	ps->setDamping(.01);
+		//	ps->setRestitution(2);
+			ps->setActorFlag(PxActorFlag::eDISABLE_GRAVITY,true);
+		// add particle system to scene, if creation was successful
+		if (ps)
+		{
+			m_Scene->scene()->addActor(*ps);
+			//create a particle emiter to make particles for our scene
+			particleEmitter = new ParticleEmitter(maxParticles,PxVec3(0,50,0),ps,.002f);
+		}
+
 	}
 
 	// Shooting range
@@ -95,7 +129,7 @@ bool PhysX::onCreate(int a_argc, char* a_argv[]) {
 		float wz = 50;
 
 		glm::vec3 size		(1.0f,0.25f,2.0f);
-		glm::vec3 extent	(2.0f,3.0f,25.0f);
+		glm::vec3 extent	(2.0f,2.0f ,5.0f);
 		float stride = 2;
 		for (float x = size.x * 0.5f; x < extent.x; x += size.x){
 			for (float z = size.z * 0.5f; z < extent.z; z += size.z){
@@ -122,17 +156,16 @@ bool PhysX::onCreate(int a_argc, char* a_argv[]) {
 		float wx = -50;
 		float wz = -50;
 		std::string sBoxMesh = "linkedBoxes[~][`]";
-		glm::vec3 size(1.0f,1.0f,0.01f);
-		glm::ivec2 stride(10,3);
+		glm::vec3 size(1.3f,1.3f,0.1f);
+		glm::ivec2 stride(5,3);
 		float height = 8;
-		// Our two handles
-		m_Scene->AddBox("linkedBoxesTopPP",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(0.5f) ,glm::vec3(wx + (stride.x * 2),height,wz + (stride.y * 2)));
-		m_Scene->AddBox("linkedBoxesTopPN",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(0.5f) ,glm::vec3(wx + (stride.x * 2),height,wz - (stride.y * 2)));
-		m_Scene->AddBox("linkedBoxesTopMPP",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(0.5f),glm::vec3(wx			       ,height,wz + (stride.y * 2)));
-		m_Scene->AddBox("linkedBoxesTopMPN",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(0.5f),glm::vec3(wx			       ,height,wz - (stride.y * 2)));
-		m_Scene->AddBox("linkedBoxesTopNP",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(0.5f) ,glm::vec3(wx - (stride.x * 2),height,wz + (stride.y * 2)));
-		m_Scene->AddBox("linkedBoxesTopNN",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(0.5f) ,glm::vec3(wx - (stride.x * 2),height,wz - (stride.y * 2)));
-
+		m_Scene->AddBox("Playground3",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(10,1,6),glm::vec3(wx + 28,3,wz),physx::PxQuat(-glm::half_pi<float>() / 4,physx::PxVec3(0,0,1)));
+		m_Scene->AddBox("Playground4",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(1,40,10),glm::vec3(wx - 18,20,wz));
+		// Our handles
+		m_Scene->AddBox("linkedBoxesTopPP",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(0.5f) ,glm::vec3(wx + (stride.x * 2.8),height,wz + (stride.y * 2.8)));
+		m_Scene->AddBox("linkedBoxesTopPN",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(0.5f) ,glm::vec3(wx + (stride.x * 2.8),height,wz - (stride.y * 2.8)));
+		m_Scene->AddBox("linkedBoxesTopNP",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(0.5f) ,glm::vec3(wx - (stride.x * 2.8),height,wz + (stride.y * 2.8)));
+		m_Scene->AddBox("linkedBoxesTopNN",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(0.5f) ,glm::vec3(wx - (stride.x * 2.8),height,wz - (stride.y * 2.8)));
 
 		char buffer[16];
 		for (int y = -stride.x; y <= stride.x; y++){
@@ -176,46 +209,57 @@ bool PhysX::onCreate(int a_argc, char* a_argv[]) {
 		}
 		
 		// Link to our handles
-		m_Scene->linkDistance(m_Scene->getActor("linkedBoxesTopPP"),physx::PxTransform(physx::PxVec3(0,0,0)),m_Scene->getActor("linkedBoxes[10][3]"),physx::PxTransform(physx::PxVec3(0,0,0)),1.0f,1.0f);
-		m_Scene->linkDistance(m_Scene->getActor("linkedBoxesTopPN"),physx::PxTransform(physx::PxVec3(0,0,0)),m_Scene->getActor("linkedBoxes[10][-3]"),physx::PxTransform(physx::PxVec3(0,0,0)),1.0f,1.0f);
+		m_Scene->linkDistance(m_Scene->getActor("linkedBoxesTopPP"),physx::PxTransform(physx::PxVec3(0,0,0)),m_Scene->getActor("linkedBoxes[5][3]"),physx::PxTransform(physx::PxVec3(0,0,0)),1.0f,1.0f);
+		m_Scene->linkDistance(m_Scene->getActor("linkedBoxesTopPN"),physx::PxTransform(physx::PxVec3(0,0,0)),m_Scene->getActor("linkedBoxes[5][-3]"),physx::PxTransform(physx::PxVec3(0,0,0)),1.0f,1.0f);
 
-		m_Scene->linkDistance(m_Scene->getActor("linkedBoxesTopMPP"),physx::PxTransform(physx::PxVec3(0,0,0)),m_Scene->getActor("linkedBoxes[0][3]"),physx::PxTransform(physx::PxVec3(0,0,0)),1.0f,1.0f);
-		m_Scene->linkDistance(m_Scene->getActor("linkedBoxesTopMPN"),physx::PxTransform(physx::PxVec3(0,0,0)),m_Scene->getActor("linkedBoxes[0][-3]"),physx::PxTransform(physx::PxVec3(0,0,0)),1.0f,1.0f);
-
-		m_Scene->linkDistance(m_Scene->getActor("linkedBoxesTopNP"),physx::PxTransform(physx::PxVec3(0,0,0)),m_Scene->getActor("linkedBoxes[-10][3]"),physx::PxTransform(physx::PxVec3(0,0,0)),1.0f,1.0f);
-		m_Scene->linkDistance(m_Scene->getActor("linkedBoxesTopNN"),physx::PxTransform(physx::PxVec3(0,0,0)),m_Scene->getActor("linkedBoxes[-10][-3]"),physx::PxTransform(physx::PxVec3(0,0,0)),1.0f,1.0f);
+		m_Scene->linkDistance(m_Scene->getActor("linkedBoxesTopNP"),physx::PxTransform(physx::PxVec3(0,0,0)),m_Scene->getActor("linkedBoxes[-5][3]"),physx::PxTransform(physx::PxVec3(0,0,0)),1.0f,1.0f);
+		m_Scene->linkDistance(m_Scene->getActor("linkedBoxesTopNN"),physx::PxTransform(physx::PxVec3(0,0,0)),m_Scene->getActor("linkedBoxes[-5][-3]"),physx::PxTransform(physx::PxVec3(0,0,0)),1.0f,1.0f);
 	}
 
 	return true;
 }
 
+float timer = 0.0f;
 void PhysX::onUpdate(float a_deltaTime) {
-	Utility::freeMovement( m_cameraMatrix, a_deltaTime, 50 );
-	Gizmos::clear();
-	Gizmos::addTransform( glm::mat4(1,0,0,0,0,1,0,0,0,0,1,0,0,1,0,1) );
-	
-	//!- TUTORIAL
-	static float fTimer = 0.0f;
-	static int bulletnumber = 0; 
-	if (glfwGetMouseButton(m_window,GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) {
-		if (fTimer <= 0){
-			fTimer = 1/15.0f;
-			std::string bullet = "bullet_";
-			char buffer[32];
-			sprintf(buffer,"%i",bulletnumber++);
-			bullet.append(buffer);
-			m_Scene->AddSphere((char*)bullet.c_str(),physx::PxActorType::Enum::eRIGID_DYNAMIC,100,0.5f,m_cameraMatrix[3].xyz,physx::PxQuat(0,0,0,0),m_cameraMatrix[2].xyz,100.0f);
+	timer -= a_deltaTime;
+	if (timer <= 0.0f){
+		timer = 1/TIMESTEP;
+		Utility::freeMovement( m_cameraMatrix, a_deltaTime, 50 );
+		Gizmos::clear();
+		Gizmos::addTransform( glm::mat4(1,0,0,0,0,1,0,0,0,0,1,0,0,1,0,1) );
+
+		static float fTimer = 0.0f;
+		static int bulletnumber = 0; 
+		if (glfwGetMouseButton(m_window,GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) {
+			if (fTimer <= 0){
+				fTimer = 1/15.0f;
+				std::string bullet = "bullet_";
+				char buffer[32];
+				sprintf(buffer,"%i",bulletnumber++);
+				bullet.append(buffer);
+				m_Scene->AddSphere((char*)bullet.c_str(),physx::PxActorType::Enum::eRIGID_DYNAMIC,100,0.5f,m_cameraMatrix[3].xyz,physx::PxQuat(0,0,0,0),m_cameraMatrix[2].xyz,100.0f);
+			}
 		}
-	}
-	fTimer -= a_deltaTime;
+		fTimer -= a_deltaTime;
 
-	m_Scene->controlActor(a_deltaTime,m_cameraMatrix,m_Scene->getActor("PlayerBody"),100);
-
-	m_Scene->update();
-	//!- TUTORIAL
+		particleEmitter->upDate(a_deltaTime); // Not really an update, more of a removal check
+		if (bWaterHit){ particleFluidEmitter->upDate(a_deltaTime); }
+		m_Scene->controlActor(a_deltaTime,m_cameraMatrix,m_Scene->getActor("PlayerBody"),100);
+		m_Scene->update();
+		
+		if (glfwGetKey(m_window,GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+			quit();
+		}
 	
-	if (glfwGetKey(m_window,GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-		quit();
+		static bool once = false;
+		if (glfwGetKey(m_window,GLFW_KEY_F11) == GLFW_PRESS) {
+			if (!once){
+				once = true;
+				printf("Actual FPS : %f \nTimeStep : 1/%i\n",1/a_deltaTime,(int)TIMESTEP);
+			}
+		}else{
+			once = false;
+		}
 	}
 }
 
@@ -224,14 +268,16 @@ void PhysX::onDraw() {
 	glm::mat4 viewMatrix = glm::inverse( m_cameraMatrix );
 		
 	m_Scene->draw();
+	particleFluidEmitter->renderParticles();
+	particleEmitter->renderParticles();
 
 	Gizmos::draw(viewMatrix, m_projectionMatrix);
 }
 
 void PhysX::onDestroy(){
-	//!- TUTORIAL
+	//!- ASSIGNMENT
 	delete m_Scene;
-	//!- TUTORIAL
+	//!- ASSIGNMENT
 	Gizmos::destroy();
 }
 

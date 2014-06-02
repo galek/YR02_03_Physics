@@ -4,6 +4,8 @@
 #include "Application.h"
 #include <glm/glm.hpp>
 #include "PhysXScene.hpp"
+#include "ParticleEmmiter.h"
+#include "ParticleFluidEmmiter.h"
 
 // Derived application class that wraps up all globals neatly
 class PhysX : public Application {
@@ -22,6 +24,8 @@ protected:
 	glm::mat4	m_cameraMatrix;
 	glm::mat4	m_projectionMatrix;
 	PhysXScene	*m_Scene;
+	ParticleFluidEmitter *particleFluidEmitter;
+	ParticleEmitter *particleEmitter;
 
 };
 
