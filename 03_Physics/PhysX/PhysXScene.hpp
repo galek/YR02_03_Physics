@@ -4,6 +4,36 @@
 #include <PxPhysicsAPI.h>
 #include <unordered_map>
 
+typedef physx::PxJoint* JOINT;
+typedef physx::PxRigidActor* ACTOR;
+
+extern bool bWaterHit;
+
+//derived class to overide the call backs we are interested in...
+class MycollisionCallBack: public physx::PxSimulationEventCallback {
+public:
+	virtual void onContact(const physx::PxContactPairHeader& pairHeader, const physx::PxContactPair* pairs, physx::PxU32 nbPairs) {
+		for(physx::PxU32 i = 0; i < nbPairs; i++) {
+			const physx::PxContactPair& cp = pairs[i];
+			if(cp.events & physx::PxPairFlag::eNOTIFY_TOUCH_FOUND){
+				printf("Collision %s %s \n",pairHeader.actors[0]->getName(),pairHeader.actors[1]->getName());
+			}
+		}
+	}
+	virtual void onTrigger(physx::PxTriggerPair* pairs, physx::PxU32 nbPairs){
+		for(physx::PxU32 i = 0; i < nbPairs; i++) {
+			physx::PxTriggerPair& cp = pairs[i];
+			if(cp.status & physx::PxPairFlag::eNOTIFY_TOUCH_FOUND){
+				bWaterHit = !bWaterHit;
+				printf("Trigger %i \n", bWaterHit);
+			}
+		}
+	};
+	virtual void onConstraintBreak(physx::PxConstraintInfo*, physx::PxU32){};
+	virtual void onWake(physx::PxActor** , physx::PxU32 ){};
+	virtual void onSleep(physx::PxActor** , physx::PxU32 ){};
+};
+
 class myAllocator: public physx::PxAllocatorCallback {
 public:
 	virtual ~myAllocator() {}
@@ -53,20 +83,22 @@ public:
 	void update();
 	void draw();
 
-	void AddPlane	(char* name, physx::PxActorType::Enum aType, const float& f_density														, const glm::vec3& v3_Transform = glm::vec3(0), const physx::PxQuat& px_Quaternion = physx::PxQuat(0,0,0,0), const glm::vec3& v3_Direction = glm::vec3(0), const float& f_Power = 0.0f);
-	void AddBox		(char* name, physx::PxActorType::Enum aType, const float& f_density, const glm::vec3& v3_Dimentions						, const glm::vec3& v3_Transform = glm::vec3(0), const physx::PxQuat& px_Quaternion = physx::PxQuat(0,0,0,0), const glm::vec3& v3_Direction = glm::vec3(0), const float& f_Power = 0.0f);
-	void AddSphere	(char* name, physx::PxActorType::Enum aType, const float& f_density, const float& f_Radius								, const glm::vec3& v3_Transform = glm::vec3(0), const physx::PxQuat& px_Quaternion = physx::PxQuat(0,0,0,0), const glm::vec3& v3_Direction = glm::vec3(0), const float& f_Power = 0.0f);
-	void AddCapsule (char* name, physx::PxActorType::Enum aType, const float& f_density, const float& f_Radius, const float& f_HalfHeight	, const glm::vec3& v3_Transform = glm::vec3(0), const physx::PxQuat& px_Quaternion = physx::PxQuat(0,0,0,0), const glm::vec3& v3_Direction = glm::vec3(0), const float& f_Power = 0.0f);
+	physx::PxRigidActor* AddPlane	(char* name, physx::PxActorType::Enum aType, const float& f_density														, const glm::vec3& v3_Transform = glm::vec3(0), const physx::PxQuat& px_Quaternion = physx::PxQuat(0,0,0,0), const glm::vec3& v3_Direction = glm::vec3(0), const float& f_Power = 0.0f);
+	physx::PxRigidActor* AddBox		(char* name, physx::PxActorType::Enum aType, const float& f_density, const glm::vec3& v3_Dimentions						, const glm::vec3& v3_Transform = glm::vec3(0), const physx::PxQuat& px_Quaternion = physx::PxQuat(0,0,0,0), const glm::vec3& v3_Direction = glm::vec3(0), const float& f_Power = 0.0f);
+	physx::PxRigidActor* AddSphere	(char* name, physx::PxActorType::Enum aType, const float& f_density, const float& f_Radius								, const glm::vec3& v3_Transform = glm::vec3(0), const physx::PxQuat& px_Quaternion = physx::PxQuat(0,0,0,0), const glm::vec3& v3_Direction = glm::vec3(0), const float& f_Power = 0.0f);
+	physx::PxRigidActor* AddCapsule (char* name, physx::PxActorType::Enum aType, const float& f_density, const float& f_Radius, const float& f_HalfHeight	, const glm::vec3& v3_Transform = glm::vec3(0), const physx::PxQuat& px_Quaternion = physx::PxQuat(0,0,0,0), const glm::vec3& v3_Direction = glm::vec3(0), const float& f_Power = 0.0f);
 	
-	void AddRagdoll (char* name, RagdollNode** nodeArray, physx::PxTransform worldPos, float scaleFactor);
-	void AddParticleSystem(char* name, int i_MaxParticles, bool b_Fluid);
+	physx::PxArticulation* AddRagdoll (char* name, RagdollNode** nodeArray, physx::PxTransform worldPos, float scaleFactor);
 
-	void linkFixed		(physx::PxRigidActor* px_Actor1, physx::PxTransform pxt_Transform1, physx::PxRigidActor* px_Actor2, physx::PxTransform pxt_Transform2);
-	void linkDistance	(physx::PxRigidActor* px_Actor1, physx::PxTransform pxt_Transform1, physx::PxRigidActor* px_Actor2, physx::PxTransform pxt_Transform2, float f_Lower, float f_Upper, float f_Spring = 0.0f, float f_Damping = 0.0f);
-	void linkSherical	(physx::PxRigidActor* px_Actor1, physx::PxTransform pxt_Transform1, physx::PxRigidActor* px_Actor2, physx::PxTransform pxt_Transform2, float f_YLimit, float f_Zlimit, float f_ContactDistance);
-	void linkRevolute	(physx::PxRigidActor* px_Actor1, physx::PxTransform pxt_Transform1, physx::PxRigidActor* px_Actor2, physx::PxTransform pxt_Transform2, float f_Lower, float f_Upper, float f_ContactDistance);
-	void linkPrismatic	(physx::PxRigidActor* px_Actor1, physx::PxTransform pxt_Transform1, physx::PxRigidActor* px_Actor2, physx::PxTransform pxt_Transform2, float f_Lower, float f_Upper, float f_ContactDistance);
+	physx::PxJoint* linkFixed		(physx::PxRigidActor* px_Actor1, physx::PxTransform pxt_Transform1, physx::PxRigidActor* px_Actor2, physx::PxTransform pxt_Transform2);
+	physx::PxJoint* linkDistance	(physx::PxRigidActor* px_Actor1, physx::PxTransform pxt_Transform1, physx::PxRigidActor* px_Actor2, physx::PxTransform pxt_Transform2, float f_Lower, float f_Upper, float f_Spring = 0.0f, float f_Damping = 0.0f);
+	physx::PxJoint* linkSherical	(physx::PxRigidActor* px_Actor1, physx::PxTransform pxt_Transform1, physx::PxRigidActor* px_Actor2, physx::PxTransform pxt_Transform2, float f_YLimit, float f_Zlimit, float f_ContactDistance);
+	physx::PxJoint* linkRevolute	(physx::PxRigidActor* px_Actor1, physx::PxTransform pxt_Transform1, physx::PxRigidActor* px_Actor2, physx::PxTransform pxt_Transform2, float f_Lower, float f_Upper, float f_ContactDistance);
+	physx::PxJoint* linkPrismatic	(physx::PxRigidActor* px_Actor1, physx::PxTransform pxt_Transform1, physx::PxRigidActor* px_Actor2, physx::PxTransform pxt_Transform2, float f_Lower, float f_Upper, float f_ContactDistance);
+	physx::PxJoint* linkD6			(physx::PxRigidActor* px_Actor1, physx::PxTransform pxt_Transform1, physx::PxRigidActor* px_Actor2, physx::PxTransform pxt_Transform2);
 		
+	void createTrigger(physx::PxRigidActor* px_Actor1);
+
 	// Get a ragdoll from its Name
 	physx::PxArticulation* getRagdoll(char* ragdollName){
 		std::string name = ragdollName;

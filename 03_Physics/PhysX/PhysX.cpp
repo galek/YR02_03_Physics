@@ -9,26 +9,26 @@
 #define DEFAULT_SCREENHEIGHT 720
 
 RagdollNode* HumanRagdoll[21] = {
-	new RagdollNode(physx::PxQuat(physx::PxPi/2.0f,Z_AXIS)		,-1, 1.0f, 3.0f	, 1.0f , 1.0f, "lowerSpine"),
-	new RagdollNode(physx::PxQuat(physx::PxPi,Z_AXIS)			, 0, 1.0f, 1.0f	,-1.0f , 1.0f, "leftPelvis"),
-	new RagdollNode(physx::PxQuat(0,Z_AXIS)						, 0, 1.0f, 1.0f	,-1.0f , 1.0f, "rightPelvis"),
-	new RagdollNode(physx::PxQuat(physx::PxPi/2.0f+0.2f,Z_AXIS)	, 1, 5.0f, 2.0f	,-1.0f , 1.0f, "leftUpperLeg"),
-	new RagdollNode(physx::PxQuat(physx::PxPi/2.0f-0.2f,Z_AXIS)	, 2, 5.0f, 2.0f ,-1.0f , 1.0f, "right upperLeg"),
-	new RagdollNode(physx::PxQuat(physx::PxPi/2.0f+0.2f,Z_AXIS)	, 3, 5.0f, 1.75f,-1.0f , 1.0f, "leftLowerLeg"),
-	new RagdollNode(physx::PxQuat(physx::PxPi/2.0f-0.2f,Z_AXIS)	, 4, 5.0f, 1.75f,-1.0f , 1.0f, "rightLowerLeg"),
-	new RagdollNode(physx::PxQuat(physx::PxPi/2.0f,Y_AXIS)		, 5, 1.5f, 1.5f	,-1.0f , 1.0f, "leftFoot"),
-	new RagdollNode(physx::PxQuat(physx::PxPi/2.0f,Y_AXIS)		, 6, 1.5f, 1.5f	,-1.0f , 1.0f, "rightFoot"),
-	new RagdollNode(physx::PxQuat(physx::PxPi/2.0f,Z_AXIS)		, 0, 1.0f, 3.0f , 1.0f ,-1.0f, "upperSpine"),
-	new RagdollNode(physx::PxQuat(physx::PxPi,Z_AXIS)			, 9, 1.0f, 1.5f , 1.0f , 1.0f, "leftClavicle"),
-	new RagdollNode(physx::PxQuat(0,Z_AXIS)						, 9, 1.0f, 1.5f , 1.0f , 1.0f, "rightClavicle"),
-	new RagdollNode(physx::PxQuat(physx::PxPi/2.0f,Z_AXIS)		, 9, 1.0f, 1.0f , 1.0f ,-1.0f, "neck"),
-	new RagdollNode(physx::PxQuat(physx::PxPi/2.0f,Z_AXIS)		,12, 1.0f, 3.0f , 1.0f ,-1.0f, "head"),
-	new RagdollNode(physx::PxQuat(physx::PxPi-.3,Z_AXIS)		,10, 3.0f, 1.5f ,-1.0f , 1.0f, "leftUpperArm"),
-	new RagdollNode(physx::PxQuat(0.3,Z_AXIS)					,11, 3.0f, 1.5f ,-1.0f , 1.0f, "rightUpperArm"),
-	new RagdollNode(physx::PxQuat(physx::PxPi-.3,Z_AXIS)		,14, 3.0f, 1.0f ,-1.0f , 1.0f, "leftLowerArm"),
-	new RagdollNode(physx::PxQuat(0.3,Z_AXIS)					,15, 3.0f, 1.0f ,-1.0f , 1.0f, "rightLowerArm"),
-	new RagdollNode(physx::PxQuat(physx::PxPi-.3,Z_AXIS)		,16, 1.0f, 1.5f ,-1.0f , 1.0f, "leftHand"),
-	new RagdollNode(physx::PxQuat(0.3,Z_AXIS)					,17, 1.0f, 1.5f ,-1.0f , 1.0f, "rightHand"),
+	new RagdollNode(physx::PxQuat(physx::PxPi/2.0f,Z_AXIS)		,-1, 0.5f, 3.0f	, 1.0f , 1.0f, "lowerSpine"),
+	new RagdollNode(physx::PxQuat(physx::PxPi,Z_AXIS)			, 0, 0.5f, 1.0f	,-1.0f , 1.0f, "leftPelvis"),
+	new RagdollNode(physx::PxQuat(0,Z_AXIS)						, 0, 0.5f, 1.0f	,-1.0f , 1.0f, "rightPelvis"),
+	new RagdollNode(physx::PxQuat(physx::PxPi/2.0f+0.2f,Z_AXIS)	, 1, 2.5f, 2.0f	,-1.0f , 1.0f, "leftUpperLeg"),
+	new RagdollNode(physx::PxQuat(physx::PxPi/2.0f-0.2f,Z_AXIS)	, 2, 2.5f, 2.0f ,-1.0f , 1.0f, "right upperLeg"),
+	new RagdollNode(physx::PxQuat(physx::PxPi/2.0f+0.2f,Z_AXIS)	, 3, 2.5f, 1.75f,-1.0f , 1.0f, "leftLowerLeg"),
+	new RagdollNode(physx::PxQuat(physx::PxPi/2.0f-0.2f,Z_AXIS)	, 4, 2.5f, 1.75f,-1.0f , 1.0f, "rightLowerLeg"),
+	new RagdollNode(physx::PxQuat(physx::PxPi/2.0f,Y_AXIS)		, 5, 0.7f, 1.5f	,-1.0f , 1.0f, "leftFoot"),
+	new RagdollNode(physx::PxQuat(physx::PxPi/2.0f,Y_AXIS)		, 6, 0.7f, 1.5f	,-1.0f , 1.0f, "rightFoot"),
+	new RagdollNode(physx::PxQuat(physx::PxPi/2.0f,Z_AXIS)		, 0, 0.5f, 3.0f , 1.0f ,-1.0f, "upperSpine"),
+	new RagdollNode(physx::PxQuat(physx::PxPi,Z_AXIS)			, 9, 0.5f, 1.5f , 1.0f , 1.0f, "leftClavicle"),
+	new RagdollNode(physx::PxQuat(0,Z_AXIS)						, 9, 0.5f, 1.5f , 1.0f , 1.0f, "rightClavicle"),
+	new RagdollNode(physx::PxQuat(physx::PxPi/2.0f,Z_AXIS)		, 9, 0.5f, 1.0f , 1.0f ,-1.0f, "neck"),
+	new RagdollNode(physx::PxQuat(physx::PxPi/2.0f,Z_AXIS)		,12, 0.5f, 3.0f , 1.0f ,-1.0f, "head"),
+	new RagdollNode(physx::PxQuat(physx::PxPi-.3,Z_AXIS)		,10, 1.5f, 1.5f ,-1.0f , 1.0f, "leftUpperArm"),
+	new RagdollNode(physx::PxQuat(0.3,Z_AXIS)					,11, 1.5f, 1.5f ,-1.0f , 1.0f, "rightUpperArm"),
+	new RagdollNode(physx::PxQuat(physx::PxPi-.3,Z_AXIS)		,14, 1.5f, 1.0f ,-1.0f , 1.0f, "leftLowerArm"),
+	new RagdollNode(physx::PxQuat(0.3,Z_AXIS)					,15, 1.5f, 1.0f ,-1.0f , 1.0f, "rightLowerArm"),
+	new RagdollNode(physx::PxQuat(physx::PxPi-.3,Z_AXIS)		,16, 0.5f, 1.5f ,-1.0f , 1.0f, "leftHand"),
+	new RagdollNode(physx::PxQuat(0.3,Z_AXIS)					,17, 0.5f, 1.5f ,-1.0f , 1.0f, "rightHand"),
 	NULL
 };
 
@@ -44,12 +44,7 @@ bool PhysX::onCreate(int a_argc, char* a_argv[]) {
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 	
-	m_Scene = new PhysXScene(60,16);
-
-	// Player
-	{
-		m_Scene->AddCapsule("PlayerBody",physx::PxActorType::Enum::eRIGID_DYNAMIC,10,1,2,glm::vec3(0,4,0));
-	}
+	m_Scene = new PhysXScene(60,8);
 
 	// Outer Walls
 	{
@@ -64,15 +59,34 @@ bool PhysX::onCreate(int a_argc, char* a_argv[]) {
 
 	// Ragdoll
 	{
-		m_Scene->AddRagdoll("Player",HumanRagdoll,physx::PxTransform(physx::PxVec3(0,10.0f,0)),0.1f);
+		for (int x = 0; x < 9; x++){
+			std::string NPC = "NPC";
+			char buffer[32];
+			sprintf(buffer,"[%i]",(int)(x));NPC.append(buffer);
+			m_Scene->AddRagdoll((char*)NPC.c_str(),HumanRagdoll,physx::PxTransform(physx::PxVec3( x * 6.0f ,3.0f,0 * 5.0f)),0.1f);
+		}
 	}
 
-	// Parkour Ground
+	// Playground
 	{
-		float wx = 50;
-		float wz = -50;
-		m_Scene->AddBox("parkour1",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3( 5,1,5),glm::vec3(wx + 10.8,6.7,wz + 10));
-		m_Scene->AddBox("parkour2",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(10,1,3),glm::vec3(wx + -3,3,wz + 10),physx::PxQuat(glm::half_pi<float>() / 4,physx::PxVec3(0,0,1)));
+		m_Scene->AddCapsule("PlayerBody",physx::PxActorType::Enum::eRIGID_DYNAMIC,10,1,2,glm::vec3(50,4,-50));
+		m_Scene->AddBox("Playground1",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3( 5,1,5),glm::vec3(60.8f,6.7,-60));
+		m_Scene->AddBox("Playground2",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(10,1,3),glm::vec3(47,3,-60),physx::PxQuat(glm::half_pi<float>() / 4,physx::PxVec3(0,0,1)));
+		m_Scene->AddBox("Playground3",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(10,1,6),glm::vec3(-18,3,-50),physx::PxQuat(-glm::half_pi<float>() / 4,physx::PxVec3(0,0,1)));
+	}
+
+	// Water
+	{
+		ACTOR a = m_Scene->AddBox("WaterPad1",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(2,0.5,2),glm::vec3(-75,0.25,45));
+		m_Scene->createTrigger(a);
+
+		m_Scene->AddBox("WaterWall1",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(1,4,25),glm::vec3(-50,2,75));
+		m_Scene->AddBox("WaterWall2",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(25,4,1),glm::vec3(-75,2,50));
+		m_Scene->AddBox("WaterSpout",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(5,50,5),glm::vec3(-75,75,75));
+		m_Scene->AddBox("WaterTapa1",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(1,1,2),glm::vec3(-75,30,68));
+		m_Scene->AddBox("WaterTapa2",physx::PxActorType::Enum::eRIGID_DYNAMIC,10,glm::vec3(5,5,1),glm::vec3(-75,30,65));
+		physx::PxD6Joint *j = (physx::PxD6Joint*)m_Scene->linkD6(m_Scene->getActor("WaterTapa2"),physx::PxTransform(physx::PxVec3(0,0,0)),m_Scene->getActor("WaterTapa1"),physx::PxTransform(physx::PxVec3(0,0,0)));
+		j->setMotion(physx::PxD6Axis::eSWING2,physx::PxD6Motion::eFREE);
 	}
 
 	// Shooting range
@@ -99,7 +113,7 @@ bool PhysX::onCreate(int a_argc, char* a_argv[]) {
 			std::string shooting = "shooting_stride";
 			char buffer[32];
 			sprintf(buffer,"[%i]",(int)(z * 100));shooting.append(buffer);
-			m_Scene->AddBox((char*)shooting.c_str(),physx::PxActorType::Enum::eRIGID_DYNAMIC,100,glm::vec3(size.yzx * 0.5f),glm::vec3(wx + 0.4f, extent.y * (size.y * 2) + (size.z * 1.75f),wz +  (extent.z * 0.5f) - z));
+			m_Scene->AddBox((char*)shooting.c_str(),physx::PxActorType::Enum::eRIGID_DYNAMIC,10,glm::vec3(size.yzx * 0.5f),glm::vec3(wx + 0.4f, extent.y * (size.y * 2) + (size.z * 1.75f),wz +  (extent.z * 0.5f) - z));
 		}
 	}
 
@@ -108,28 +122,33 @@ bool PhysX::onCreate(int a_argc, char* a_argv[]) {
 		float wx = -50;
 		float wz = -50;
 		std::string sBoxMesh = "linkedBoxes[~][`]";
-
+		glm::vec3 size(1.0f,1.0f,0.01f);
+		glm::ivec2 stride(10,3);
+		float height = 8;
 		// Our two handles
-		m_Scene->AddBox("linkedBoxesTopPP",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(0.5f),glm::vec3(wx + 10,20,wz + 6));
-		m_Scene->AddBox("linkedBoxesTopPN",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(0.5f),glm::vec3(wx + 10,20,wz - 6));
-		m_Scene->AddBox("linkedBoxesTopNP",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(0.5f),glm::vec3(wx - 10,20,wz + 6));
-		m_Scene->AddBox("linkedBoxesTopNN",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(0.5f),glm::vec3(wx - 10,20,wz - 6));
+		m_Scene->AddBox("linkedBoxesTopPP",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(0.5f) ,glm::vec3(wx + (stride.x * 2),height,wz + (stride.y * 2)));
+		m_Scene->AddBox("linkedBoxesTopPN",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(0.5f) ,glm::vec3(wx + (stride.x * 2),height,wz - (stride.y * 2)));
+		m_Scene->AddBox("linkedBoxesTopMPP",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(0.5f),glm::vec3(wx			       ,height,wz + (stride.y * 2)));
+		m_Scene->AddBox("linkedBoxesTopMPN",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(0.5f),glm::vec3(wx			       ,height,wz - (stride.y * 2)));
+		m_Scene->AddBox("linkedBoxesTopNP",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(0.5f) ,glm::vec3(wx - (stride.x * 2),height,wz + (stride.y * 2)));
+		m_Scene->AddBox("linkedBoxesTopNN",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(0.5f) ,glm::vec3(wx - (stride.x * 2),height,wz - (stride.y * 2)));
+
 
 		char buffer[16];
-		for (int y = 0; y < 15; y++){
-			for (int x = -5; x < 5; x++){
+		for (int y = -stride.x; y <= stride.x; y++){
+			for (int x = -stride.y; x <= stride.y; x++){
 				std::string str = sBoxMesh;
 				sprintf(buffer,"%i",y);str.replace(str.find("~"),1,buffer);
 				sprintf(buffer,"%i",x);str.replace(str.find("`"),1,buffer);
-				m_Scene->AddBox((char*)str.c_str(),physx::PxActorType::Enum::eRIGID_DYNAMIC,1000,glm::vec3(0.6f,0.6f,0.1f),glm::vec3(wx + x,y + 5,wz));
+				m_Scene->AddBox((char*)str.c_str(),physx::PxActorType::Enum::eRIGID_DYNAMIC,100,size,glm::vec3(wx + (y * 2),height,wz + (x * 2)));
 			}
 		}
 
 		// Does nothing smart, simple gets actors around it, link them
 		// LinkDistance wont link same, or non existing actors.
 		// Multiple linking is present(if it even exists in PhysX)
-		for (int y = 0; y < 15; y++){
-			for (int x = -5; x < 5; x++){
+		for (int y = -stride.x; y <= stride.x; y++){
+			for (int x = -stride.y; x <= stride.y; x++){
 				std::string actorme = sBoxMesh;
 				sprintf(buffer,"%i",y);actorme.replace(actorme.find("~"),1,buffer);
 				sprintf(buffer,"%i",x);actorme.replace(actorme.find("`"),1,buffer);
@@ -137,30 +156,34 @@ bool PhysX::onCreate(int a_argc, char* a_argv[]) {
 				std::string actorOther = sBoxMesh;
 				sprintf(buffer,"%i",y+1);actorOther.replace(actorOther.find("~"),1,buffer);
 				sprintf(buffer,"%i",x  );actorOther.replace(actorOther.find("`"),1,buffer);
-				m_Scene->linkDistance(m_Scene->getActor((char*)actorme.c_str()),physx::PxTransform(physx::PxVec3(0,-0.5f,0)),m_Scene->getActor((char*)actorOther.c_str()),physx::PxTransform(physx::PxVec3(0,0.5f,0)),0.0f,0.2f);
+				m_Scene->linkDistance(m_Scene->getActor((char*)actorme.c_str()),physx::PxTransform(physx::PxVec3(0,-size.y,0)),m_Scene->getActor((char*)actorOther.c_str()),physx::PxTransform(physx::PxVec3(0,size.y,0)),0.0f,0.1f);
 		
 				actorOther = sBoxMesh;
 				sprintf(buffer,"%i",y-1);actorOther.replace(actorOther.find("~"),1,buffer);
 				sprintf(buffer,"%i",x  );actorOther.replace(actorOther.find("`"),1,buffer);
-				m_Scene->linkDistance(m_Scene->getActor((char*)actorme.c_str()),physx::PxTransform(physx::PxVec3(0,0.5f,0)),m_Scene->getActor((char*)actorOther.c_str()),physx::PxTransform(physx::PxVec3(0,-0.5f,0)),0.0f,0.2f);
+				m_Scene->linkDistance(m_Scene->getActor((char*)actorme.c_str()),physx::PxTransform(physx::PxVec3(0,size.y,0)),m_Scene->getActor((char*)actorOther.c_str()),physx::PxTransform(physx::PxVec3(0,-size.y,0)),0.0f,0.1f);
 		
 				actorOther = sBoxMesh;
 				sprintf(buffer,"%i",y  );actorOther.replace(actorOther.find("~"),1,buffer);
 				sprintf(buffer,"%i",x+1);actorOther.replace(actorOther.find("`"),1,buffer);
-				m_Scene->linkDistance(m_Scene->getActor((char*)actorme.c_str()),physx::PxTransform(physx::PxVec3(-0.5f,0,0)),m_Scene->getActor((char*)actorOther.c_str()),physx::PxTransform(physx::PxVec3(0.5f,0,0)),0.0f,0.2f);
+				m_Scene->linkDistance(m_Scene->getActor((char*)actorme.c_str()),physx::PxTransform(physx::PxVec3(-size.x,0,0)),m_Scene->getActor((char*)actorOther.c_str()),physx::PxTransform(physx::PxVec3(size.y,0,0)),0.0f,0.1f);
 		
 				actorOther = sBoxMesh;
 				sprintf(buffer,"%i",y  );actorOther.replace(actorOther.find("~"),1,buffer);
 				sprintf(buffer,"%i",x-1);actorOther.replace(actorOther.find("`"),1,buffer);
-				m_Scene->linkDistance(m_Scene->getActor((char*)actorme.c_str()),physx::PxTransform(physx::PxVec3(0.5f,0,0)),m_Scene->getActor((char*)actorOther.c_str()),physx::PxTransform(physx::PxVec3(-0.5f,0,0)),0.0f,0.2f);
+				m_Scene->linkDistance(m_Scene->getActor((char*)actorme.c_str()),physx::PxTransform(physx::PxVec3(size.x,0,0)),m_Scene->getActor((char*)actorOther.c_str()),physx::PxTransform(physx::PxVec3(-size.x,0,0)),0.0f,0.1f);
 			}
 		}
 		
 		// Link to our handles
-		m_Scene->linkDistance(m_Scene->getActor("linkedBoxesTopPP"),physx::PxTransform(physx::PxVec3(0,0,0)),m_Scene->getActor("linkedBoxes[14][4]"),physx::PxTransform(physx::PxVec3(0,0,0)),1.0f,1.0f);
-		m_Scene->linkDistance(m_Scene->getActor("linkedBoxesTopPN"),physx::PxTransform(physx::PxVec3(0,0,0)),m_Scene->getActor("linkedBoxes[14][-5]"),physx::PxTransform(physx::PxVec3(0,0,0)),1.0f,1.0f);
-		m_Scene->linkDistance(m_Scene->getActor("linkedBoxesTopNP"),physx::PxTransform(physx::PxVec3(0,0,0)),m_Scene->getActor("linkedBoxes[0][4]"),physx::PxTransform(physx::PxVec3(0,0,0)),1.0f,1.0f);
-		m_Scene->linkDistance(m_Scene->getActor("linkedBoxesTopNN"),physx::PxTransform(physx::PxVec3(0,0,0)),m_Scene->getActor("linkedBoxes[0][-5]"),physx::PxTransform(physx::PxVec3(0,0,0)),1.0f,1.0f);
+		m_Scene->linkDistance(m_Scene->getActor("linkedBoxesTopPP"),physx::PxTransform(physx::PxVec3(0,0,0)),m_Scene->getActor("linkedBoxes[10][3]"),physx::PxTransform(physx::PxVec3(0,0,0)),1.0f,1.0f);
+		m_Scene->linkDistance(m_Scene->getActor("linkedBoxesTopPN"),physx::PxTransform(physx::PxVec3(0,0,0)),m_Scene->getActor("linkedBoxes[10][-3]"),physx::PxTransform(physx::PxVec3(0,0,0)),1.0f,1.0f);
+
+		m_Scene->linkDistance(m_Scene->getActor("linkedBoxesTopMPP"),physx::PxTransform(physx::PxVec3(0,0,0)),m_Scene->getActor("linkedBoxes[0][3]"),physx::PxTransform(physx::PxVec3(0,0,0)),1.0f,1.0f);
+		m_Scene->linkDistance(m_Scene->getActor("linkedBoxesTopMPN"),physx::PxTransform(physx::PxVec3(0,0,0)),m_Scene->getActor("linkedBoxes[0][-3]"),physx::PxTransform(physx::PxVec3(0,0,0)),1.0f,1.0f);
+
+		m_Scene->linkDistance(m_Scene->getActor("linkedBoxesTopNP"),physx::PxTransform(physx::PxVec3(0,0,0)),m_Scene->getActor("linkedBoxes[-10][3]"),physx::PxTransform(physx::PxVec3(0,0,0)),1.0f,1.0f);
+		m_Scene->linkDistance(m_Scene->getActor("linkedBoxesTopNN"),physx::PxTransform(physx::PxVec3(0,0,0)),m_Scene->getActor("linkedBoxes[-10][-3]"),physx::PxTransform(physx::PxVec3(0,0,0)),1.0f,1.0f);
 	}
 
 	return true;
@@ -181,7 +204,7 @@ void PhysX::onUpdate(float a_deltaTime) {
 			char buffer[32];
 			sprintf(buffer,"%i",bulletnumber++);
 			bullet.append(buffer);
-			m_Scene->AddSphere((char*)bullet.c_str(),physx::PxActorType::Enum::eRIGID_DYNAMIC,1000,0.5f,m_cameraMatrix[3].xyz,physx::PxQuat(0,0,0,0),m_cameraMatrix[2].xyz,100.0f);
+			m_Scene->AddSphere((char*)bullet.c_str(),physx::PxActorType::Enum::eRIGID_DYNAMIC,100,0.5f,m_cameraMatrix[3].xyz,physx::PxQuat(0,0,0,0),m_cameraMatrix[2].xyz,100.0f);
 		}
 	}
 	fTimer -= a_deltaTime;

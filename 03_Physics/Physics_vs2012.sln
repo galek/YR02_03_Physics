@@ -5,6 +5,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PhysX", "PhysX\PhysX.vcxpro
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PhysicsDIY", "PhysicsDIY\PhysicsDIY.vcxproj", "{DF974984-B38E-4330-A642-012116246F33}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "particles", "..\..\..\Downloads\Particle Tutorial\Particle Tutorial\particles tutorial.vcxproj", "{62D4B480-96FC-4C48-A95A-07889E925E70}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -19,6 +21,10 @@ Global
 		{DF974984-B38E-4330-A642-012116246F33}.Debug|Win32.Build.0 = Debug|Win32
 		{DF974984-B38E-4330-A642-012116246F33}.Release|Win32.ActiveCfg = Release|Win32
 		{DF974984-B38E-4330-A642-012116246F33}.Release|Win32.Build.0 = Release|Win32
+		{62D4B480-96FC-4C48-A95A-07889E925E70}.Debug|Win32.ActiveCfg = Debug|Win32
+		{62D4B480-96FC-4C48-A95A-07889E925E70}.Debug|Win32.Build.0 = Debug|Win32
+		{62D4B480-96FC-4C48-A95A-07889E925E70}.Release|Win32.ActiveCfg = Release|Win32
+		{62D4B480-96FC-4C48-A95A-07889E925E70}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

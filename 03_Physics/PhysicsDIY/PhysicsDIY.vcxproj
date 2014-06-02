@@ -75,10 +75,22 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Actor.cpp" />
+    <ClCompile Include="Base.cpp" />
+    <ClCompile Include="Colliders.cpp" />
     <ClCompile Include="PhysicsDIY.cpp" />
+    <ClCompile Include="Scene.cpp" />
+    <ClCompile Include="Shape.cpp" />
+    <ClCompile Include="Spatial.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Actor.hpp" />
+    <ClInclude Include="Base.hpp" />
+    <ClInclude Include="Colliders.hpp" />
     <ClInclude Include="PhysicsDIY.h" />
+    <ClInclude Include="Scene.hpp" />
+    <ClInclude Include="Shape.hpp" />
+    <ClInclude Include="Spatial.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
