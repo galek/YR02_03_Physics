@@ -78,6 +78,7 @@ const physx::PxVec3 Z_AXIS = physx::PxVec3(0,0,1);
 class PhysXScene {
 public:
 	PhysXScene(float f_TicksPerSecond,int i_ThreadCount = 4);
+	void Reload(float f_TicksPerSecond,int i_ThreadCount = 4);
 	~PhysXScene();	
 	
 	void update();
@@ -171,5 +172,4 @@ private:
 	std::unordered_map<unsigned long long,physx::PxRigidActor*>		g_PhysXActors;
 	std::unordered_map<unsigned long long,physx::PxJoint*>			g_PhysXJoints;
 	std::unordered_map<unsigned long long,physx::PxArticulation*>	g_PhysXActorsRagDolls;
-	std::unordered_map<unsigned long long,physx::PxParticleBase*>	g_PhysXParticles;
 };

@@ -1,8 +1,8 @@
-#include "ParticleFluidEmmiter.h";
-#include <iostream>;
-#include<vector>;
-#include "Gizmos.h";
-
+#include "ParticleFluidEmmiter.h"
+#include <iostream>
+#include<vector>
+#include "Gizmos.h"
+#include <GL/glew.h>
 
 //constructor
 ParticleFluidEmitter::ParticleFluidEmitter(int _maxParticles, PxVec3 _position,PxParticleFluid* _pf,float _releaseDelay){
@@ -166,21 +166,39 @@ void ParticleFluidEmitter::renderParticles()
 				//density tells us how many neighbours a particle has.  
 				//If it has a density of 0 it has no neighbours, 1 is maximum neighbouts
 				//we can use this to decide if the particle is seperate or part of a larger body of fluid
-				glm::vec3 pos(positionIt->x,positionIt->y,positionIt->z);						
-				Gizmos::addTri(pos + glm::vec3(0,0,0),pos + glm::vec3(1,0,0),pos + glm::vec3(1,1,0),glm::vec4(0.4f,1.0f,0.2f,1));
-				Gizmos::addTri(pos + glm::vec3(0,0,0),pos + glm::vec3(1,1,0),pos + glm::vec3(0,1,0),glm::vec4(0.4f,1.0f,0.2f,1));
 
-				Gizmos::addTri(pos + glm::vec3(0,0,0),pos + glm::vec3(1,1,0),pos + glm::vec3(1,0,0),glm::vec4(0.4f,1.0f,0.2f,1));
-				Gizmos::addTri(pos + glm::vec3(0,0,0),pos + glm::vec3(0,1,0),pos + glm::vec3(1,1,0),glm::vec4(0.4f,1.0f,0.2f,1));
+				glm::vec4 finalc(0,0,1,0.5f);
+				float size = 0.8f;
 
-				Gizmos::addTri(pos + glm::vec3(0,0,0),pos + glm::vec3(1,0,0),pos + glm::vec3(1,0,1),glm::vec4(0.4f,1.0f,0.2f,1));
-				Gizmos::addTri(pos + glm::vec3(0,0,0),pos + glm::vec3(1,0,1),pos + glm::vec3(0,0,1),glm::vec4(0.4f,1.0f,0.2f,1));
+				const PxF32 *val = densityIt.ptr();
+				if (val != nullptr){
+					glm::vec4 cWater(0,0,1,0.5f);
+					glm::vec4 cWash(1.0f);
+					finalc = glm::mix(cWash,cWater,(float)(*densityIt.ptr()));
+				}else{
+					printf("NULL density\n");
+				}
 
-				Gizmos::addTri(pos + glm::vec3(0,0,0),pos + glm::vec3(1,0,1),pos + glm::vec3(1,0,0),glm::vec4(0.4f,1.0f,0.2f,1));
-				Gizmos::addTri(pos + glm::vec3(0,0,0),pos + glm::vec3(0,0,1),pos + glm::vec3(1,0,1),glm::vec4(0.4f,1.0f,0.2f,1));
+				glm::vec3 pos(positionIt->x,positionIt->y,positionIt->z);
+
+				Gizmos::addTri(pos + glm::vec3(0,-size,-size),pos + glm::vec3(0,-size, size),pos + glm::vec3(0, size, size),finalc);
+				Gizmos::addTri(pos + glm::vec3(0,-size,-size),pos + glm::vec3(0, size, size),pos + glm::vec3(0, size,-size),finalc);
+				Gizmos::addTri(pos + glm::vec3(0,-size,-size),pos + glm::vec3(0, size, size),pos + glm::vec3(0,-size, size),finalc);
+				Gizmos::addTri(pos + glm::vec3(0,-size,-size),pos + glm::vec3(0, size,-size),pos + glm::vec3(0, size, size),finalc);
+
+				Gizmos::addTri(pos + glm::vec3(-size,-size,0),pos + glm::vec3( size,-size,0),pos + glm::vec3( size, size,0),finalc);
+				Gizmos::addTri(pos + glm::vec3(-size,-size,0),pos + glm::vec3( size, size,0),pos + glm::vec3(-size, size,0),finalc);
+				Gizmos::addTri(pos + glm::vec3(-size,-size,0),pos + glm::vec3( size, size,0),pos + glm::vec3( size,-size,0),finalc);
+				Gizmos::addTri(pos + glm::vec3(-size,-size,0),pos + glm::vec3(-size, size,0),pos + glm::vec3( size, size,0),finalc);
+
+				Gizmos::addTri(pos + glm::vec3(-size,0,-size),pos + glm::vec3( size,0,-size),pos + glm::vec3( size,0, size),finalc);
+				Gizmos::addTri(pos + glm::vec3(-size,0,-size),pos + glm::vec3( size,0, size),pos + glm::vec3(-size,0, size),finalc);
+				Gizmos::addTri(pos + glm::vec3(-size,0,-size),pos + glm::vec3( size,0, size),pos + glm::vec3( size,0,-size),finalc);
+				Gizmos::addTri(pos + glm::vec3(-size,0,-size),pos + glm::vec3(-size,0, size),pos + glm::vec3(-size,0, size),finalc);
 			}
 		}
 		// return ownership of the buffers back to the SDK
 		fd->unlock();
 	}
 }
+

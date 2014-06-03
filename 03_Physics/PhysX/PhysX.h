@@ -21,6 +21,8 @@ protected:
 	virtual void onDraw();
 	virtual void onDestroy();
 
+	void SwitchLevel(int level);
+
 	glm::mat4	m_cameraMatrix;
 	glm::mat4	m_projectionMatrix;
 	PhysXScene	*m_Scene;

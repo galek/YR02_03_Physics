@@ -36,19 +36,32 @@ RagdollNode* HumanRagdoll[21] = {
 PhysX::PhysX(){}
 PhysX::~PhysX(){}
 
-bool PhysX::onCreate(int a_argc, char* a_argv[]) {
+enum LEVELS{
+	SHOOTING = 1,
+	LINKED = SHOOTING << 1,
+	RAGDOLL = LINKED << 1,
+	WATER = RAGDOLL << 1,
+	PARTICLES = WATER << 1,
+	CLOTH = PARTICLES << 1,
+	ALL = CLOTH << 1
+};
 
-	Gizmos::create(SHRT_MAX * 2,SHRT_MAX * 2);
-	m_cameraMatrix = glm::inverse( glm::lookAt(glm::vec3(0,10,0),glm::vec3(-50,10,-50), glm::vec3(0,1,0)) );
-	m_projectionMatrix = glm::perspective(glm::pi<float>() * 0.25f, DEFAULT_SCREENWIDTH/(float)DEFAULT_SCREENHEIGHT, 0.1f, 1000.0f);
-	glClearColor(0.25f,0.25f,0.25f,1);
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
-	
-	m_Scene = new PhysXScene(TIMESTEP,8);
+void PhysX::SwitchLevel(int level){
+	static int lastlevel = 0;
+	if (level == lastlevel){return;}
+	lastlevel = level;
+	if (particleFluidEmitter != nullptr){delete particleFluidEmitter;particleFluidEmitter = nullptr;}
+	if (particleEmitter != nullptr){delete particleEmitter;particleEmitter = nullptr;}
+	if (m_Scene != nullptr){m_Scene->Reload(TIMESTEP,8);}else{m_Scene = new PhysXScene(TIMESTEP,8);}
+	bWaterHit = false;
 
+	if (lastlevel & ALL){
+		lastlevel = SHOOTING + LINKED + RAGDOLL + WATER + PARTICLES + CLOTH + ALL;
+	}
 	// Outer Walls
 	{
+		m_Scene->AddCapsule("PlayerBody",physx::PxActorType::Enum::eRIGID_DYNAMIC,10,1,2,glm::vec3(0,4,-0));
+
 		m_Scene->AddPlane("floor",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(0,0,0),physx::PxQuat(glm::half_pi<float>(),physx::PxVec3(0,0,1)));
 		m_Scene->AddPlane("roof",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(0,100,0),physx::PxQuat(-glm::half_pi<float>(),physx::PxVec3(0,0,1)));
 
@@ -58,73 +71,7 @@ bool PhysX::onCreate(int a_argc, char* a_argv[]) {
 		m_Scene->AddBox("zNeg",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(100,50,1),glm::vec3(0,50,-100));
 	}
 
-	// Ragdoll
-	{
-		m_Scene->AddRagdoll("Ragdoll1",HumanRagdoll,physx::PxTransform(physx::PxVec3( 6.0f ,3.0f, 0.0f)),0.1f);
-	}
-
-	// Playground
-	{
-		m_Scene->AddCapsule("PlayerBody",physx::PxActorType::Enum::eRIGID_DYNAMIC,10,1,2,glm::vec3(50,4,-50));
-		m_Scene->AddBox("Playground1",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3( 5,1,5),glm::vec3(60.8f,6.7,-60));
-		m_Scene->AddBox("Playground2",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(10,1,3),glm::vec3(47,3,-60),physx::PxQuat(glm::half_pi<float>() / 4,physx::PxVec3(0,0,1)));
-	}
-
-	// Water
-	{
-		float wx = -50;
-		float wz = 50;
-
-		ACTOR a = m_Scene->AddBox("WaterPad1",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(2,0.5,2),glm::vec3(wx,0.25,wz));
-		m_Scene->createTrigger(a);
-
-		m_Scene->AddBox("WaterWall1",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(10,4, 1),glm::vec3(wx     ,2,wz + 10));
-		m_Scene->AddBox("WaterWall2",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(10,4, 1),glm::vec3(wx     ,2,wz - 10));
-		m_Scene->AddBox("WaterWall3",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3( 1,4,10),glm::vec3(wx + 10,2,wz     ));
-		m_Scene->AddBox("WaterWall4",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3( 1,4,10),glm::vec3(wx - 10,2,wz     ));
-
-		PxParticleFluid* pf;
-		// create particle system in PhysX SDK
-		// set immutable properties.
-		PxU32 maxParticles = 5000;
-		bool perParticleRestOffset = false;
-		pf = m_Scene->physics()->createParticleFluid(maxParticles, perParticleRestOffset);
-		pf->setRestParticleDistance(1.0f);
-		pf->setDynamicFriction(0.1f);
-		pf->setStaticFriction(0.1f);
-		pf->setContactOffset(2.0f);
-		pf->setDamping(0.1f);
-		pf->setParticleMass(1.0f);
-		pf->setRestitution(0.0f);
-		pf->setParticleReadDataFlag(PxParticleReadDataFlag::eDENSITY_BUFFER,true);
-		pf->setParticleBaseFlag(PxParticleBaseFlag::eCOLLISION_TWOWAY,true);
-		if (pf) {
-			m_Scene->scene()->addActor(*pf);
-			particleFluidEmitter = new ParticleFluidEmitter(maxParticles,PxVec3(wx,2,wz),pf,0.001f);
-		}
-
-		maxParticles = 4000;
-		perParticleRestOffset = false;
-		PxParticleSystem* ps;
-		// create particle system in PhysX SDK
-		ps = m_Scene->physics()->createParticleSystem(maxParticles, perParticleRestOffset);
-		//various flags we can set/clear to get different effects
-		//  ps->setParticleBaseFlag(PxParticleBaseFlag::eCOLLISION_TWOWAY,true);
-		//	ps->setDamping(.01);
-		//	ps->setRestitution(2);
-			ps->setActorFlag(PxActorFlag::eDISABLE_GRAVITY,true);
-		// add particle system to scene, if creation was successful
-		if (ps)
-		{
-			m_Scene->scene()->addActor(*ps);
-			//create a particle emiter to make particles for our scene
-			particleEmitter = new ParticleEmitter(maxParticles,PxVec3(0,50,0),ps,.002f);
-		}
-
-	}
-
-	// Shooting range
-	{
+	if (lastlevel & SHOOTING){
 		float wx = 50;
 		float wz = 50;
 
@@ -150,9 +97,7 @@ bool PhysX::onCreate(int a_argc, char* a_argv[]) {
 			m_Scene->AddBox((char*)shooting.c_str(),physx::PxActorType::Enum::eRIGID_DYNAMIC,10,glm::vec3(size.yzx * 0.5f),glm::vec3(wx + 0.4f, extent.y * (size.y * 2) + (size.z * 1.75f),wz +  (extent.z * 0.5f) - z));
 		}
 	}
-
-	// Linked Actors
-	{
+	if (lastlevel & LINKED)	{
 		float wx = -50;
 		float wz = -50;
 		std::string sBoxMesh = "linkedBoxes[~][`]";
@@ -216,6 +161,99 @@ bool PhysX::onCreate(int a_argc, char* a_argv[]) {
 		m_Scene->linkDistance(m_Scene->getActor("linkedBoxesTopNN"),physx::PxTransform(physx::PxVec3(0,0,0)),m_Scene->getActor("linkedBoxes[-5][-3]"),physx::PxTransform(physx::PxVec3(0,0,0)),1.0f,1.0f);
 	}
 
+	if (lastlevel & RAGDOLL){
+		if (lastlevel & ALL){
+			m_Scene->AddRagdoll("Ragdoll",HumanRagdoll,physx::PxTransform(physx::PxVec3( 6.0f ,3.0f, 6.0f)),0.1f);
+		}else{
+			for (int x = -2; x <= 2; x++){
+				for (int z = -2; z <= 2; z++){
+					std::string Ragdoll = "Ragdoll_";
+					char buffer[32];
+					sprintf(buffer,"[%i]",(int)(x));Ragdoll.append(buffer);
+					sprintf(buffer,"[%i]",(int)(z));Ragdoll.append(buffer);
+					m_Scene->AddRagdoll((char*)Ragdoll.c_str(),HumanRagdoll,physx::PxTransform(physx::PxVec3( x * 6.0f ,3.0f,z * 6.0f)),0.1f);
+				}
+			}
+		}
+	}
+
+	if (lastlevel & WATER){
+		float wx = -50;
+		float wz = 50;
+
+		ACTOR a = m_Scene->AddBox("WaterPad1",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(2,0.5,2),glm::vec3(wx,0.25,wz));
+		m_Scene->createTrigger(a);
+
+		m_Scene->AddBox("WaterWall1",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(10,4, 1),glm::vec3(wx     ,2,wz + 10));
+		m_Scene->AddBox("WaterWall2",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(10,4, 1),glm::vec3(wx     ,2,wz - 10));
+		m_Scene->AddBox("WaterWall3",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3( 1,4,10),glm::vec3(wx + 10,2,wz     ));
+		m_Scene->AddBox("WaterWall4",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3( 1,4,10),glm::vec3(wx - 10,2,wz     ));
+
+		PxParticleFluid* pf;
+		// create particle system in PhysX SDK
+		// set immutable properties.
+		PxU32 maxParticles = 5000;
+		bool perParticleRestOffset = false;
+		pf = m_Scene->physics()->createParticleFluid(maxParticles, perParticleRestOffset);
+		pf->setRestParticleDistance(1.0f);
+		pf->setDynamicFriction(0.1f);
+		pf->setStaticFriction(0.1f);
+		pf->setContactOffset(2.0f);
+		pf->setDamping(0.1f);
+		pf->setParticleMass(1.0f);
+		pf->setRestitution(0.0f);
+		pf->setParticleReadDataFlag(PxParticleReadDataFlag::eDENSITY_BUFFER,true);
+		pf->setParticleBaseFlag(PxParticleBaseFlag::eCOLLISION_TWOWAY,true);
+		if (pf) {
+			m_Scene->scene()->addActor(*pf);
+			particleFluidEmitter = new ParticleFluidEmitter(maxParticles,PxVec3(wx,2,wz),pf,0.001f);
+		}
+	}
+
+	if (lastlevel & PARTICLES){
+		float maxParticles = 4000;
+		bool perParticleRestOffset = false;
+		PxParticleSystem* ps;
+		// create particle system in PhysX SDK
+		ps = m_Scene->physics()->createParticleSystem(maxParticles, perParticleRestOffset);
+		//various flags we can set/clear to get different effects
+		//ps->setParticleBaseFlag(PxParticleBaseFlag::eCOLLISION_TWOWAY,true);
+		//ps->setDamping(.01);
+		//ps->setRestitution(2);
+		//ps->setActorFlag(PxActorFlag::eDISABLE_GRAVITY,true);
+		// add particle system to scene, if creation was successful
+		if (ps) {
+			m_Scene->scene()->addActor(*ps);
+			//create a particle emiter to make particles for our scene
+			particleEmitter = new ParticleEmitter(maxParticles,PxVec3(0,5,0),ps,.001f);
+		}
+	}
+
+	if (lastlevel & CLOTH){
+		printf("Nothing yet..\n");
+	}
+}
+
+#define KEYONCESTART(key,varname) static bool varname = false; if (glfwGetKey(m_window,key) == GLFW_PRESS) {if (!varname){varname = true;
+#define KEYONCEEND(varname) }}else{varname = false;}
+
+bool PhysX::onCreate(int a_argc, char* a_argv[]) {
+
+	Gizmos::create(SHRT_MAX * 2,SHRT_MAX * 2);
+	m_cameraMatrix = glm::inverse( glm::lookAt(glm::vec3(0,10,0),glm::vec3(-50,10,-50), glm::vec3(0,1,0)) );
+	m_projectionMatrix = glm::perspective(glm::pi<float>() * 0.25f, DEFAULT_SCREENWIDTH/(float)DEFAULT_SCREENHEIGHT, 0.1f, 1000.0f);
+	glClearColor(0.25f,0.25f,0.25f,1);
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	
+	m_Scene = nullptr;
+	particleEmitter = nullptr;
+	particleFluidEmitter = nullptr;
+
+	SwitchLevel(ALL);
+
 	return true;
 }
 
@@ -237,29 +275,64 @@ void PhysX::onUpdate(float a_deltaTime) {
 				char buffer[32];
 				sprintf(buffer,"%i",bulletnumber++);
 				bullet.append(buffer);
-				m_Scene->AddSphere((char*)bullet.c_str(),physx::PxActorType::Enum::eRIGID_DYNAMIC,100,0.5f,m_cameraMatrix[3].xyz,physx::PxQuat(0,0,0,0),m_cameraMatrix[2].xyz,100.0f);
+				m_Scene->AddSphere((char*)bullet.c_str(),physx::PxActorType::Enum::eRIGID_DYNAMIC,1000,1.0f,m_cameraMatrix[3].xyz,physx::PxQuat(0,0,0,0),m_cameraMatrix[2].xyz,50.0f);
 			}
 		}
 		fTimer -= a_deltaTime;
 
-		particleEmitter->upDate(a_deltaTime); // Not really an update, more of a removal check
-		if (bWaterHit){ particleFluidEmitter->upDate(a_deltaTime); }
+		if (particleEmitter != nullptr){
+			particleEmitter->upDate(a_deltaTime); // Not really an update, more of a removal check
+		}
+
+		if (bWaterHit && particleFluidEmitter != nullptr){ 
+			particleFluidEmitter->upDate(a_deltaTime); 
+		}
+
 		m_Scene->controlActor(a_deltaTime,m_cameraMatrix,m_Scene->getActor("PlayerBody"),100);
 		m_Scene->update();
 		
 		if (glfwGetKey(m_window,GLFW_KEY_ESCAPE) == GLFW_PRESS) {
 			quit();
 		}
-	
-		static bool once = false;
-		if (glfwGetKey(m_window,GLFW_KEY_F11) == GLFW_PRESS) {
-			if (!once){
-				once = true;
-				printf("Actual FPS : %f \nTimeStep : 1/%i\n",1/a_deltaTime,(int)TIMESTEP);
-			}
-		}else{
-			once = false;
-		}
+
+		KEYONCESTART(GLFW_KEY_F11,F11Once)
+		printf("Actual FPS : %f \nTimeStep : 1/%i\n",1/a_deltaTime,(int)TIMESTEP);
+		KEYONCEEND(F11Once)
+
+		KEYONCESTART(GLFW_KEY_F10,F10Once)
+		printf("SHOOTING scene.\n");
+		SwitchLevel(SHOOTING);
+		KEYONCEEND(F10Once)
+
+		KEYONCESTART(GLFW_KEY_F9,F9Once)
+		printf("LINKED scene.\n");
+		SwitchLevel(LINKED);
+		KEYONCEEND(F9Once)
+
+		KEYONCESTART(GLFW_KEY_F8,F8Once)
+		printf("RAGDOLL scene.\n");
+		SwitchLevel(RAGDOLL);
+		KEYONCEEND(F8Once)
+
+		KEYONCESTART(GLFW_KEY_F7,F7Once)
+		printf("WATER scene.\n");
+		SwitchLevel(WATER);
+		KEYONCEEND(F7Once)
+
+		KEYONCESTART(GLFW_KEY_F6,F6Once)
+		printf("PARTICLES scene.\n");
+		SwitchLevel(PARTICLES);
+		KEYONCEEND(F6Once)
+
+		KEYONCESTART(GLFW_KEY_F5,F5Once)
+		printf("CLOTH scene.\n");
+		SwitchLevel(CLOTH);
+		KEYONCEEND(F5Once)
+
+		KEYONCESTART(GLFW_KEY_F4,F4Once)
+		printf("All scene.\n");
+		SwitchLevel(ALL);
+		KEYONCEEND(F4Once);
 	}
 }
 
@@ -268,15 +341,22 @@ void PhysX::onDraw() {
 	glm::mat4 viewMatrix = glm::inverse( m_cameraMatrix );
 		
 	m_Scene->draw();
-	particleFluidEmitter->renderParticles();
-	particleEmitter->renderParticles();
+
+	if (particleFluidEmitter != nullptr){ 
+		particleFluidEmitter->renderParticles();
+	}
+	if (particleEmitter != nullptr){
+		particleEmitter->renderParticles();
+	}
 
 	Gizmos::draw(viewMatrix, m_projectionMatrix);
 }
 
 void PhysX::onDestroy(){
 	//!- ASSIGNMENT
-	delete m_Scene;
+	if (m_Scene != nullptr){ 
+		delete m_Scene;
+	}
 	//!- ASSIGNMENT
 	Gizmos::destroy();
 }

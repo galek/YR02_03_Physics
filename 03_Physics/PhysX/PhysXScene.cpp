@@ -3,6 +3,7 @@
 #include <glm\ext.hpp>
 #include <GLFW\glfw3.h>
 #include <algorithm>
+#include <pxtask/PxCudaContextManager.h>
 
 bool bWaterHit = false;
 
@@ -179,6 +180,75 @@ PhysXScene::PhysXScene(float f_TicksPerSecond,int i_ThreadCount){
 	sceneDesc.gravity = physx::PxVec3(0,-9.8f,0);
 	sceneDesc.filterShader = gDefaultFilterShader;
 	sceneDesc.cpuDispatcher = physx::PxDefaultCpuDispatcherCreate(i_ThreadCount);
+
+	//physx::pxtask::CudaContextManagerDesc cudaContextManagerDesc;
+    //physx::pxtask::CudaContextManager *mCudaContextManager = physx::pxtask::createCudaContextManager(*g_PhysicsFoundation, cudaContextManagerDesc, nullptr);
+    //if( mCudaContextManager ){
+    //    if( mCudaContextManager->contextIsValid() ){
+    //        sceneDesc.gpuDispatcher = mCudaContextManager->getGpuDispatcher();
+	//		printf("Cuda context created!\n");
+    //    }
+    //}
+
+	g_PhysicsScene = g_Physics->createScene(sceneDesc);
+
+	if(g_PhysicsScene) {
+		printf("Start physx scene.\n");
+	}
+
+	// check if PvdConnection manager is available on this platform
+	if (NULL == g_Physics->getPvdConnectionManager())
+		return;
+	// setup connection parameters
+	const char* pvd_host_ip = "127.0.0.1"; // IP of the PC which is running PVD
+	int port = 5425; // TCP port to connect to, where PVD is listening
+	unsigned int timeout = 100; // timeout in milliseconds to wait for PVD to respond,
+	// consoles and remote PCs need a higher timeout.
+	physx::PxVisualDebuggerConnectionFlags connectionFlags = physx::PxVisualDebuggerConnectionFlag::Debug | physx::PxVisualDebuggerConnectionFlag::Profile | physx::PxVisualDebuggerConnectionFlag::Memory;
+	// and now try to connect
+	physx::PxVisualDebuggerExt::createConnection(g_Physics->getPvdConnectionManager(),pvd_host_ip, port, timeout, connectionFlags);
+	// pvd_host_ip, port, timeout, connectionFlags));
+
+	physx::PxSimulationEventCallback* mycollisionCallBack = new MycollisionCallBack(); //instantiate ourclass to overload call backs
+	g_PhysicsScene->setSimulationEventCallback(mycollisionCallBack); //tell the scene to use our call back class
+}
+
+void PhysXScene::Reload(float f_TicksPerSecond,int i_ThreadCount){
+
+	g_PhysXActors.clear();
+	g_PhysXJoints.clear();
+	g_PhysXActorsRagDolls.clear();
+
+	g_PhysicsCooker->release();
+	g_PhysicsScene->release();
+	g_Physics->release();
+
+	fTicksPerSecond = f_TicksPerSecond;
+	g_Physics = nullptr;
+	g_PhysicsScene = nullptr;
+	gDefaultFilterShader = myFliterShader;//physx::PxDefaultSimulationFilterShader;
+	g_PhysicsMaterial = nullptr;
+	g_PhysicsCooker = nullptr;
+
+	g_Physics = PxCreatePhysics(PX_PHYSICS_VERSION, *g_PhysicsFoundation, physx::PxTolerancesScale());
+	g_PhysicsCooker = PxCreateCooking(PX_PHYSICS_VERSION, *g_PhysicsFoundation, physx::PxCookingParams(physx::PxTolerancesScale()));
+	PxInitExtensions(*g_Physics);
+	//create physics material
+	g_PhysicsMaterial = g_Physics->createMaterial(0.5f,0.5f,0.6f);
+	physx::PxSceneDesc sceneDesc(g_Physics->getTolerancesScale());
+	sceneDesc.gravity = physx::PxVec3(0,-9.8f,0);
+	sceneDesc.filterShader = gDefaultFilterShader;
+	sceneDesc.cpuDispatcher = physx::PxDefaultCpuDispatcherCreate(i_ThreadCount);
+
+	//physx::pxtask::CudaContextManagerDesc cudaContextManagerDesc;
+    //physx::pxtask::CudaContextManager *mCudaContextManager = physx::pxtask::createCudaContextManager(*g_PhysicsFoundation, cudaContextManagerDesc, nullptr);
+    //if( mCudaContextManager ){
+    //    if( mCudaContextManager->contextIsValid() ){
+    //        sceneDesc.gpuDispatcher = mCudaContextManager->getGpuDispatcher();
+	//		printf("Cuda context created!\n");
+    //    }
+    //}
+
 	g_PhysicsScene = g_Physics->createScene(sceneDesc);
 
 	if(g_PhysicsScene) {
@@ -284,11 +354,6 @@ void PhysXScene::draw(){
 
 		Gizmos::addLine(pos1,pos2,glm::vec4(1.0f));
 	}
-	// and all our particles
-	for (auto system : g_PhysXParticles) {
-		// do particle stuff
-	}
-
 	srand(ran);
 }
 

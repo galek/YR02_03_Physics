@@ -39,7 +39,7 @@
 #include <direct.h>
 #include <XInput.h>
 
-#pragma comment(lib, "XInput.lib")
+#pragma comment(lib, "XInput9_1_0.lib")
 
 static bool gTimeInit=false;
 

@@ -70,12 +70,11 @@ bool ParticleEmitter::addPhysXParticle(int particleIndex){
 	//set up the buffers
 	PxU32 myIndexBuffer[] = {particleIndex};
 	PxVec3 startPos = position;
-	startPos.x += (rand()%200 - 100);
-	startPos.z += (rand()%200 - 100);
-	PxVec3 startVel(0,-50,0);
+	PxVec3 startVel(0,0,0);
 	//randomize starting velocity.
-	startVel.x += (rand()%100 - 50);
-	startVel.z += (rand()%100 - 50);
+	startVel.x += (rand()%1000 - 500);
+	startVel.y += (rand()%1000);
+	startVel.z += (rand()%1000 - 500);
 
 	//we can change starting position tos get different emitter shapes
 	PxVec3 myPositionBuffer[] = {startPos};
@@ -156,12 +155,24 @@ void ParticleEmitter::renderParticles()
 			if (*flagsIt & PxParticleFlag::eVALID){
 				//convert physx vector to a glm vec3
 				glm::vec3 pos(positionIt->x,positionIt->y,positionIt->z);
-				//use a gizmo box to visualize particle.  This would be much better done using a facing quad preferably done using the geometry shader
-				Gizmos::addTri(pos + glm::vec3(0,0,0),pos + glm::vec3(1,0,0),pos + glm::vec3(1,1,0),glm::vec4(0,0,1,0.1f));
-				Gizmos::addTri(pos + glm::vec3(0,0,0),pos + glm::vec3(1,1,0),pos + glm::vec3(0,1,0),glm::vec4(0,0,1,0.1f));
 
-				Gizmos::addTri(pos + glm::vec3(0,0,0),pos + glm::vec3(1,1,0),pos + glm::vec3(1,0,0),glm::vec4(0,0,1,0.1f));
-				Gizmos::addTri(pos + glm::vec3(0,0,0),pos + glm::vec3(0,1,0),pos + glm::vec3(1,1,0),glm::vec4(0,0,1,0.1f));
+				glm::vec4 finalc(1,0,0,1);
+				float size = 0.5f;
+
+				Gizmos::addTri(pos + glm::vec3(0,-size,-size),pos + glm::vec3(0,-size, size),pos + glm::vec3(0, size, size),finalc);
+				Gizmos::addTri(pos + glm::vec3(0,-size,-size),pos + glm::vec3(0, size, size),pos + glm::vec3(0, size,-size),finalc);
+				Gizmos::addTri(pos + glm::vec3(0,-size,-size),pos + glm::vec3(0, size, size),pos + glm::vec3(0,-size, size),finalc);
+				Gizmos::addTri(pos + glm::vec3(0,-size,-size),pos + glm::vec3(0, size,-size),pos + glm::vec3(0, size, size),finalc);
+
+				Gizmos::addTri(pos + glm::vec3(-size,-size,0),pos + glm::vec3( size,-size,0),pos + glm::vec3( size, size,0),finalc);
+				Gizmos::addTri(pos + glm::vec3(-size,-size,0),pos + glm::vec3( size, size,0),pos + glm::vec3(-size, size,0),finalc);
+				Gizmos::addTri(pos + glm::vec3(-size,-size,0),pos + glm::vec3( size, size,0),pos + glm::vec3( size,-size,0),finalc);
+				Gizmos::addTri(pos + glm::vec3(-size,-size,0),pos + glm::vec3(-size, size,0),pos + glm::vec3( size, size,0),finalc);
+
+				Gizmos::addTri(pos + glm::vec3(-size,0,-size),pos + glm::vec3( size,0,-size),pos + glm::vec3( size,0, size),finalc);
+				Gizmos::addTri(pos + glm::vec3(-size,0,-size),pos + glm::vec3( size,0, size),pos + glm::vec3(-size,0, size),finalc);
+				Gizmos::addTri(pos + glm::vec3(-size,0,-size),pos + glm::vec3( size,0, size),pos + glm::vec3( size,0,-size),finalc);
+				Gizmos::addTri(pos + glm::vec3(-size,0,-size),pos + glm::vec3(-size,0, size),pos + glm::vec3(-size,0, size),finalc);
 			}
 		}
 		// return ownership of the buffers back to the SDK
