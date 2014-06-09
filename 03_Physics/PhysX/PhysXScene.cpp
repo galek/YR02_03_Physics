@@ -1,9 +1,16 @@
 #include "PhysXScene.hpp"
 #include <Gizmos.h>
+#include <Utilities.h>
+#include <SOIL.h>
+
 #include <glm\ext.hpp>
+
+#include <gl\glew.h>
 #include <GLFW\glfw3.h>
+
 #include <algorithm>
 #include <pxtask/PxCudaContextManager.h>
+#include <PxTkStream.h>
 
 bool bWaterHit = false;
 
@@ -218,6 +225,7 @@ void PhysXScene::Reload(float f_TicksPerSecond,int i_ThreadCount){
 	g_PhysXActors.clear();
 	g_PhysXJoints.clear();
 	g_PhysXActorsRagDolls.clear();
+	g_PhysXActorsCloths.clear();
 
 	g_PhysicsCooker->release();
 	g_PhysicsScene->release();
@@ -280,10 +288,17 @@ PhysXScene::~PhysXScene() {
 
 void PhysXScene::update(){
 	g_PhysicsScene->simulate( 1 / fTicksPerSecond );
-	//g_PhysicsScene->fetchResults();
 	while (g_PhysicsScene->fetchResults() == false) {}
+
+	for (auto actor : g_PhysXActorsCloths) {
+		physx::PxClothReadData* data = actor.second->m_cloth->lockClothReadData();
+		for ( unsigned int i = 0 ; i < actor.second->m_clothVertexCount; ++i){
+			actor.second->m_clothPositions[i] = glm::vec3(data->particles[i].pos.x,data->particles[i].pos.y,data->particles[i].pos.z);
+		}
+		data->unlock();
+	}
 }
-void PhysXScene::draw(){
+void PhysXScene::draw(const glm::mat4 *m4_ViewProjection){
 	int ran = rand();
 	srand(3);
 	// draw all our actors
@@ -354,6 +369,24 @@ void PhysXScene::draw(){
 
 		Gizmos::addLine(pos1,pos2,glm::vec4(1.0f));
 	}
+
+	for (auto actor : g_PhysXActorsCloths) {
+		glUseProgram(actor.second->m_shader);
+		int location = glGetUniformLocation(actor.second->m_shader, "projectionView");
+		glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(*m4_ViewProjection));
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, actor.second->m_texture);
+		// update vertex positions from the cloth
+		glBindBuffer(GL_ARRAY_BUFFER, actor.second->m_clothVBO);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, actor.second->m_clothVertexCount * sizeof(glm::vec3), actor.second->m_clothPositions);
+		// disable face culling so that we can draw it double-sided
+		glDisable(GL_CULL_FACE);
+		// bind and draw the cloth
+		glBindVertexArray(actor.second->m_clothVAO);
+		glDrawElements(GL_TRIANGLES, actor.second->m_clothIndexCount, GL_UNSIGNED_INT, 0);
+		glEnable(GL_CULL_FACE);
+	}
+
 	srand(ran);
 }
 
@@ -567,6 +600,138 @@ physx::PxArticulation* PhysXScene::AddRagdoll(char* name, RagdollNode** nodeArra
 	g_PhysXActorsRagDolls[l] = ragDollArticulation;
 
 	return ragDollArticulation;
+}
+void PhysXScene::AddCloth(char* name,ClothData *ClothIn,float f_springSize, unsigned int ui_SpringRows, unsigned int ui_SprtingCols){
+	if (ClothIn == nullptr){return;}
+	// shifting grid position for looks
+	float halfWidth = ui_SpringRows * f_springSize * 0.5f;
+	// generate vertices for a grid with texture coordinates
+	ClothIn->m_clothVertexCount = ui_SpringRows * ui_SprtingCols;
+	ClothIn->m_clothPositions = new glm::vec3[ClothIn->m_clothVertexCount];
+	glm::vec2* clothTextureCoords = new glm::vec2[ClothIn->m_clothVertexCount];
+	for (unsigned int r = 0; r < ui_SpringRows; ++r){
+		for (unsigned int c = 0; c < ui_SprtingCols; ++c){
+			ClothIn->m_clothPositions[r * ui_SprtingCols + c].x = ClothIn->clothPosition.x + f_springSize * c;
+			ClothIn->m_clothPositions[r * ui_SprtingCols + c].y = ClothIn->clothPosition.y;
+			ClothIn->m_clothPositions[r * ui_SprtingCols + c].z = ClothIn->clothPosition.z + f_springSize * r - halfWidth;
+			clothTextureCoords[r * ui_SprtingCols + c].x = 1.0f - r / (ui_SpringRows - 1.0f);
+			clothTextureCoords[r * ui_SprtingCols + c].y = 1.0f - c / (ui_SprtingCols - 1.0f);
+		}
+	}
+	// set up indices for a grid
+	ClothIn->m_clothIndexCount = (ui_SpringRows-1) * (ui_SprtingCols-1) * 2 * 3;
+	unsigned int* indices = new unsigned int[ ClothIn->m_clothIndexCount ];
+	unsigned int* index = indices;
+	for (unsigned int r = 0; r < (ui_SpringRows-1); ++r){
+		for (unsigned int c = 0; c < (ui_SprtingCols-1); ++c){
+			// indices for the 4 quad corner vertices
+			unsigned int i0 = r * ui_SprtingCols + c;
+			unsigned int i1 = i0 + 1;
+			unsigned int i2 = i0 + ui_SprtingCols;
+			unsigned int i3 = i2 + 1;
+			// every second quad changes the triangle order
+			if ((c + r) % 2){
+				*index++ = i0; *index++ = i2; *index++ = i1;
+				*index++ = i1; *index++ = i2; *index++ = i3;
+			}else{
+				*index++ = i0; *index++ = i2; *index++ = i3;
+				*index++ = i0; *index++ = i3; *index++ = i1;
+			}
+		}
+	}
+
+	// set up opengl data for the grid, with the positions as dynamic
+	glGenVertexArrays(1, &ClothIn->m_clothVAO);
+	glBindVertexArray(ClothIn->m_clothVAO);
+	glGenBuffers(1, &ClothIn->m_clothIBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ClothIn->m_clothIBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, ClothIn->m_clothIndexCount * sizeof(unsigned int), indices, GL_STATIC_DRAW);
+	glGenBuffers(1, &ClothIn->m_clothVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, ClothIn->m_clothVBO);
+	glBufferData(GL_ARRAY_BUFFER, ClothIn->m_clothVertexCount * (sizeof(glm::vec3)), 0, GL_DYNAMIC_DRAW);
+	glEnableVertexAttribArray(0); // position
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (char*)0);
+	glGenBuffers(1, &ClothIn->m_clothTextureVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, ClothIn->m_clothTextureVBO);
+	glBufferData(GL_ARRAY_BUFFER, ClothIn->m_clothVertexCount * (sizeof(glm::vec2)), clothTextureCoords, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(1); // texture
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(glm::vec2), (char*)0);
+	glBindVertexArray(0);
+
+	unsigned int vs = Utility::loadShader("shaders/03_Physics/16_SoftBodies.vert", GL_VERTEX_SHADER);
+	unsigned int fs = Utility::loadShader("shaders/03_Physics/16_SoftBodies.frag", GL_FRAGMENT_SHADER);
+	ClothIn->m_shader = Utility::createProgram(vs,0,0,0,fs);
+	glDeleteShader(vs);
+	glDeleteShader(fs);
+	ClothIn->m_texture = SOIL_load_OGL_texture("textures/random.png",SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_INVERT_Y);
+
+	// set up the cloth description
+	physx::PxClothMeshDesc clothDesc;
+	clothDesc.setToDefault();
+	clothDesc.points.count = ClothIn->m_clothVertexCount;
+	clothDesc.points.stride = sizeof(glm::vec3);
+	clothDesc.points.data = ClothIn->m_clothPositions;
+	clothDesc.triangles.count = ClothIn->m_clothIndexCount / 3;
+	clothDesc.triangles.stride = sizeof(unsigned int) * 3;
+	clothDesc.triangles.data = indices;
+	// cook the geometry into fabric
+	PxToolkit::MemoryOutputStream buf;
+	if (g_PhysicsCooker->cookClothFabric(clothDesc, physx::PxVec3(0,-9.8f,0), buf) == false) {
+		return;
+	}
+	//$(SolutionDir)../3rdParty/PhysX/Samples/PxToolkit/lib/win32
+	PxToolkit::MemoryInputData data(buf.getData(), buf.getSize());
+	physx::PxClothFabric* fabric = g_Physics->createClothFabric(data);
+
+	//Coll data
+	//physx::PxClothCollisionData cd;
+	//cd.setToDefault();
+	//cd.numSpheres = 32;
+	//cd.pairIndexBuffer = 0;
+	//ClothIn->Spheres = new physx::PxClothCollisionSphere[32];
+	//for (int x = 0; x < 32; x++){
+	//	ClothIn->Spheres[x].pos = physx::PxVec3(rand()%10,5 + rand()%5,-5 + rand()%10);
+	//	ClothIn->Spheres[x].radius = 0.5f + rand()%100 / 100.0f;
+	//}
+	//cd.spheres = ClothIn->Spheres;
+
+	// set up the particles for each vertex
+	physx::PxClothParticle* particles = new physx::PxClothParticle[ ClothIn->m_clothVertexCount ];
+	for ( unsigned int i = 0 ; i < ClothIn->m_clothVertexCount ; ++i ){
+	particles[i].pos = physx::PxVec3( ClothIn->m_clothPositions[i].x, ClothIn->m_clothPositions[i].y, ClothIn->m_clothPositions[i].z );
+
+	// set weights (0 means static)
+	if ( ClothIn->m_clothPositions[i].x == ClothIn->clothPosition.x )
+		particles[i].invWeight = 0;
+	else
+		particles[i].invWeight = 2.f;
+	}
+
+	// create the cloth then setup the spring properties
+	ClothIn->m_cloth = g_Physics->createCloth(physx::PxTransform( physx::PxVec3(ClothIn->clothPosition.x,ClothIn->clothPosition.y,ClothIn->clothPosition.z) ),*fabric, particles, physx::PxClothCollisionData(), physx::PxClothFlag::eSWEPT_CONTACT);
+	// we need to set some solver configurations
+	if (ClothIn->m_cloth != nullptr){
+		physx::PxClothPhaseSolverConfig bendCfg;
+		bendCfg.solverType = physx::PxClothPhaseSolverConfig::eFAST;
+		bendCfg.stiffness = 1.0f;
+		bendCfg.stretchStiffness = 1.0f;
+		ClothIn->m_cloth->setPhaseSolverConfig(physx::PxClothFabricPhaseType::eBENDING, bendCfg);
+		ClothIn->m_cloth->setPhaseSolverConfig(physx::PxClothFabricPhaseType::eSTRETCHING, bendCfg);
+		ClothIn->m_cloth->setPhaseSolverConfig(physx::PxClothFabricPhaseType::eSHEARING, bendCfg);
+		ClothIn->m_cloth->setPhaseSolverConfig(physx::PxClothFabricPhaseType::eSTRETCHING_HORIZONTAL, bendCfg);
+		ClothIn->m_cloth->setDampingCoefficient(1.0f);
+	}
+
+	if (ClothIn->m_cloth != nullptr){
+		unsigned long long l = getHash(std::string(name));
+		g_PhysicsScene->addActor(*ClothIn->m_cloth);
+		g_PhysXActorsCloths[l] = ClothIn;
+		ClothIn->m_cloth->setName(name);
+	}
+
+	delete[] particles;
+	delete[] clothTextureCoords;
+	delete[] indices;
 }
 
 physx::PxJoint* PhysXScene::linkFixed(physx::PxRigidActor* px_Actor1, physx::PxTransform pxt_Transform1, physx::PxRigidActor* px_Actor2 , physx::PxTransform pxt_Transform2){

@@ -70,6 +70,18 @@ struct RagdollNode {
 	}
 };
 
+struct ClothData {
+	glm::vec3 clothPosition;
+	unsigned int m_shader;
+	unsigned int m_texture;
+	unsigned int m_clothIndexCount;
+	unsigned int m_clothVertexCount;
+	glm::vec3*	m_clothPositions;
+	unsigned int m_clothVAO, m_clothVBO, m_clothTextureVBO, m_clothIBO;
+	//physx::PxClothCollisionSphere *Spheres;
+	physx::PxCloth* m_cloth;
+};
+
 //create some constants for axis of rotation to make definition of quaternions a bit neater
 const physx::PxVec3 X_AXIS = physx::PxVec3(1,0,0);
 const physx::PxVec3 Y_AXIS = physx::PxVec3(0,1,0);
@@ -82,14 +94,15 @@ public:
 	~PhysXScene();	
 	
 	void update();
-	void draw();
+	void draw(const glm::mat4 *m4_ViewProjection);
 
-	physx::PxRigidActor* AddPlane	(char* name, physx::PxActorType::Enum aType, const float& f_density														, const glm::vec3& v3_Transform = glm::vec3(0), const physx::PxQuat& px_Quaternion = physx::PxQuat(0,0,0,0), const glm::vec3& v3_Direction = glm::vec3(0), const float& f_Power = 0.0f);
-	physx::PxRigidActor* AddBox		(char* name, physx::PxActorType::Enum aType, const float& f_density, const glm::vec3& v3_Dimentions						, const glm::vec3& v3_Transform = glm::vec3(0), const physx::PxQuat& px_Quaternion = physx::PxQuat(0,0,0,0), const glm::vec3& v3_Direction = glm::vec3(0), const float& f_Power = 0.0f);
-	physx::PxRigidActor* AddSphere	(char* name, physx::PxActorType::Enum aType, const float& f_density, const float& f_Radius								, const glm::vec3& v3_Transform = glm::vec3(0), const physx::PxQuat& px_Quaternion = physx::PxQuat(0,0,0,0), const glm::vec3& v3_Direction = glm::vec3(0), const float& f_Power = 0.0f);
-	physx::PxRigidActor* AddCapsule (char* name, physx::PxActorType::Enum aType, const float& f_density, const float& f_Radius, const float& f_HalfHeight	, const glm::vec3& v3_Transform = glm::vec3(0), const physx::PxQuat& px_Quaternion = physx::PxQuat(0,0,0,0), const glm::vec3& v3_Direction = glm::vec3(0), const float& f_Power = 0.0f);
+	physx::PxRigidActor*	AddPlane	(char* name, physx::PxActorType::Enum aType, const float& f_density														, const glm::vec3& v3_Transform = glm::vec3(0), const physx::PxQuat& px_Quaternion = physx::PxQuat(0,0,0,0), const glm::vec3& v3_Direction = glm::vec3(0), const float& f_Power = 0.0f);
+	physx::PxRigidActor*	AddBox		(char* name, physx::PxActorType::Enum aType, const float& f_density, const glm::vec3& v3_Dimentions						, const glm::vec3& v3_Transform = glm::vec3(0), const physx::PxQuat& px_Quaternion = physx::PxQuat(0,0,0,0), const glm::vec3& v3_Direction = glm::vec3(0), const float& f_Power = 0.0f);
+	physx::PxRigidActor*	AddSphere	(char* name, physx::PxActorType::Enum aType, const float& f_density, const float& f_Radius								, const glm::vec3& v3_Transform = glm::vec3(0), const physx::PxQuat& px_Quaternion = physx::PxQuat(0,0,0,0), const glm::vec3& v3_Direction = glm::vec3(0), const float& f_Power = 0.0f);
+	physx::PxRigidActor*	AddCapsule (char* name, physx::PxActorType::Enum aType, const float& f_density, const float& f_Radius, const float& f_HalfHeight	, const glm::vec3& v3_Transform = glm::vec3(0), const physx::PxQuat& px_Quaternion = physx::PxQuat(0,0,0,0), const glm::vec3& v3_Direction = glm::vec3(0), const float& f_Power = 0.0f);
 	
-	physx::PxArticulation* AddRagdoll (char* name, RagdollNode** nodeArray, physx::PxTransform worldPos, float scaleFactor);
+	physx::PxArticulation*	AddRagdoll (char* name, RagdollNode** nodeArray, physx::PxTransform worldPos, float scaleFactor);
+	void					AddCloth(char* name,ClothData *ClothIn,float f_springSize = 0.2f, unsigned int ui_SpringRows = 40, unsigned int ui_SprtingCols = 40);
 
 	physx::PxJoint* linkFixed		(physx::PxRigidActor* px_Actor1, physx::PxTransform pxt_Transform1, physx::PxRigidActor* px_Actor2, physx::PxTransform pxt_Transform2);
 	physx::PxJoint* linkDistance	(physx::PxRigidActor* px_Actor1, physx::PxTransform pxt_Transform1, physx::PxRigidActor* px_Actor2, physx::PxTransform pxt_Transform2, float f_Lower, float f_Upper, float f_Spring = 0.0f, float f_Damping = 0.0f);
@@ -172,4 +185,5 @@ private:
 	std::unordered_map<unsigned long long,physx::PxRigidActor*>		g_PhysXActors;
 	std::unordered_map<unsigned long long,physx::PxJoint*>			g_PhysXJoints;
 	std::unordered_map<unsigned long long,physx::PxArticulation*>	g_PhysXActorsRagDolls;
+	std::unordered_map<unsigned long long,ClothData*>				g_PhysXActorsCloths;
 };

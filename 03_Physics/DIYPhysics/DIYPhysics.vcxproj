@@ -10,9 +10,27 @@
       <Platform>Win32</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Actor.hpp" />
+    <ClInclude Include="Collision.hpp" />
+    <ClInclude Include="Constants.hpp" />
+    <ClInclude Include="DIYPhysics.hpp" />
+    <ClInclude Include="Physics.h" />
+    <ClInclude Include="Shapes.hpp" />
+    <ClInclude Include="SceneManager.hpp" />
+    <ClInclude Include="Shape.hpp" />
+    <ClInclude Include="SpringJoint.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Actor.cpp" />
+    <ClCompile Include="Collision.cpp" />
+    <ClCompile Include="Physics.cpp" />
+    <ClCompile Include="SceneManager.cpp" />
+    <ClCompile Include="SpringJoint.cpp" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{df974984-b38e-4330-a642-012116246f33}</ProjectGuid>
-    <RootNamespace>PhysicsDIY</RootNamespace>
+    <ProjectGuid>{f4a65734-ec89-43f1-818f-20c0e76d2b90}</ProjectGuid>
+    <RootNamespace>DIYPhysics</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -74,24 +92,6 @@
       <AdditionalDependencies>FBXLoader.lib;AIEFramework.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="Actor.cpp" />
-    <ClCompile Include="Base.cpp" />
-    <ClCompile Include="Colliders.cpp" />
-    <ClCompile Include="PhysicsDIY.cpp" />
-    <ClCompile Include="Scene.cpp" />
-    <ClCompile Include="Shape.cpp" />
-    <ClCompile Include="Spatial.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="Actor.hpp" />
-    <ClInclude Include="Base.hpp" />
-    <ClInclude Include="Colliders.hpp" />
-    <ClInclude Include="PhysicsDIY.h" />
-    <ClInclude Include="Scene.hpp" />
-    <ClInclude Include="Shape.hpp" />
-    <ClInclude Include="Spatial.hpp" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

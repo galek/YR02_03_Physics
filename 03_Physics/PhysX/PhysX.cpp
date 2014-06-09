@@ -5,10 +5,26 @@
 #include <GLFW/glfw3.h>
 #include <glm/ext.hpp>
 
+// CONSTANTS
 #define DEFAULT_SCREENWIDTH 1280
 #define DEFAULT_SCREENHEIGHT 720
 #define TIMESTEP 60.0f
 
+// DEBUG DEFINES
+
+#define _USETIMESTEP
+//#define _WALLS
+//#define _SHOOT
+//#define _LINKED
+//#define _RAGDOLL
+#define _WATER
+//#define _PARTICLES
+
+// MACROS
+#define KEYONCESTART(key,varname) static bool varname = false; if (glfwGetKey(m_window,key) == GLFW_PRESS) {if (!varname){varname = true;
+#define KEYONCEEND(varname) }}else{varname = false;}
+
+// Human Ragdoll PhysX
 RagdollNode* HumanRagdoll[21] = {
 	new RagdollNode(physx::PxQuat(physx::PxPi/2.0f,Z_AXIS)		,-1, 0.5f, 3.0f	, 1.0f , 1.0f, "lowerSpine"),
 	new RagdollNode(physx::PxQuat(physx::PxPi,Z_AXIS)			, 0, 0.5f, 1.0f	,-1.0f , 1.0f, "leftPelvis"),
@@ -36,6 +52,7 @@ RagdollNode* HumanRagdoll[21] = {
 PhysX::PhysX(){}
 PhysX::~PhysX(){}
 
+// LEVEL SWITCHING
 enum LEVELS{
 	SHOOTING = 1,
 	LINKED = SHOOTING << 1,
@@ -46,6 +63,7 @@ enum LEVELS{
 	ALL = CLOTH << 1
 };
 
+// SWITCH THE LEVELS
 void PhysX::SwitchLevel(int level){
 	static int lastlevel = 0;
 	if (level == lastlevel){return;}
@@ -58,25 +76,27 @@ void PhysX::SwitchLevel(int level){
 	if (lastlevel & ALL){
 		lastlevel = SHOOTING + LINKED + RAGDOLL + WATER + PARTICLES + CLOTH + ALL;
 	}
-	// Outer Walls
+
+	m_Scene->AddPlane("floor",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(0,0,0),physx::PxQuat(glm::half_pi<float>(),physx::PxVec3(0,0,1)));
+	m_Scene->AddCapsule("PlayerBody",physx::PxActorType::Enum::eRIGID_DYNAMIC,10,1,2,glm::vec3(0,4,-0));
+
+#ifdef  _WALLS
 	{
-		m_Scene->AddCapsule("PlayerBody",physx::PxActorType::Enum::eRIGID_DYNAMIC,10,1,2,glm::vec3(0,4,-0));
-
-		m_Scene->AddPlane("floor",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(0,0,0),physx::PxQuat(glm::half_pi<float>(),physx::PxVec3(0,0,1)));
 		m_Scene->AddPlane("roof",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(0,100,0),physx::PxQuat(-glm::half_pi<float>(),physx::PxVec3(0,0,1)));
-
 		m_Scene->AddBox("xPos",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(1,50,100),glm::vec3( 100,50,0));
 		m_Scene->AddBox("xNeg",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(1,50,100),glm::vec3(-100,50,0));
 		m_Scene->AddBox("zPos",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(100,50,1),glm::vec3(0,50, 100));
 		m_Scene->AddBox("zNeg",physx::PxActorType::Enum::eRIGID_STATIC,0,glm::vec3(100,50,1),glm::vec3(0,50,-100));
 	}
+#endif
 
+#ifdef  _SHOOT
 	if (lastlevel & SHOOTING){
 		float wx = 50;
 		float wz = 50;
 
 		glm::vec3 size		(1.0f,0.25f,2.0f);
-		glm::vec3 extent	(2.0f,2.0f ,5.0f);
+		glm::vec3 extent	(2.0f,2.0f ,25.0f);
 		float stride = 2;
 		for (float x = size.x * 0.5f; x < extent.x; x += size.x){
 			for (float z = size.z * 0.5f; z < extent.z; z += size.z){
@@ -94,9 +114,12 @@ void PhysX::SwitchLevel(int level){
 			std::string shooting = "shooting_stride";
 			char buffer[32];
 			sprintf(buffer,"[%i]",(int)(z * 100));shooting.append(buffer);
-			m_Scene->AddBox((char*)shooting.c_str(),physx::PxActorType::Enum::eRIGID_DYNAMIC,10,glm::vec3(size.yzx * 0.5f),glm::vec3(wx + 0.4f, extent.y * (size.y * 2) + (size.z * 1.75f),wz +  (extent.z * 0.5f) - z));
+			m_Scene->AddBox((char*)shooting.c_str(),physx::PxActorType::Enum::eRIGID_DYNAMIC,100,glm::vec3(size.yzx * 0.5f),glm::vec3(wx + 0.4f, extent.y * (size.y * 2) + (size.z),wz +  (extent.z * 0.5f) - z));
 		}
 	}
+#endif
+
+#ifdef  _LINKED
 	if (lastlevel & LINKED)	{
 		float wx = -50;
 		float wz = -50;
@@ -160,7 +183,9 @@ void PhysX::SwitchLevel(int level){
 		m_Scene->linkDistance(m_Scene->getActor("linkedBoxesTopNP"),physx::PxTransform(physx::PxVec3(0,0,0)),m_Scene->getActor("linkedBoxes[-5][3]"),physx::PxTransform(physx::PxVec3(0,0,0)),1.0f,1.0f);
 		m_Scene->linkDistance(m_Scene->getActor("linkedBoxesTopNN"),physx::PxTransform(physx::PxVec3(0,0,0)),m_Scene->getActor("linkedBoxes[-5][-3]"),physx::PxTransform(physx::PxVec3(0,0,0)),1.0f,1.0f);
 	}
+#endif
 
+#ifdef  _RAGDOLL
 	if (lastlevel & RAGDOLL){
 		if (lastlevel & ALL){
 			m_Scene->AddRagdoll("Ragdoll",HumanRagdoll,physx::PxTransform(physx::PxVec3( 6.0f ,3.0f, 6.0f)),0.1f);
@@ -176,7 +201,9 @@ void PhysX::SwitchLevel(int level){
 			}
 		}
 	}
+#endif
 
+#ifdef  _WATER
 	if (lastlevel & WATER){
 		float wx = -50;
 		float wz = 50;
@@ -209,7 +236,9 @@ void PhysX::SwitchLevel(int level){
 			particleFluidEmitter = new ParticleFluidEmitter(maxParticles,PxVec3(wx,2,wz),pf,0.001f);
 		}
 	}
+#endif
 
+#ifdef  _PARTICLES
 	if (lastlevel & PARTICLES){
 		float maxParticles = 4000;
 		bool perParticleRestOffset = false;
@@ -230,13 +259,14 @@ void PhysX::SwitchLevel(int level){
 	}
 
 	if (lastlevel & CLOTH){
-		printf("Nothing yet..\n");
+		ClothData *cloth = new ClothData();
+		cloth->clothPosition = glm::vec3(0,12,0);
+		m_Scene->AddCloth("Cloth",cloth);
 	}
+#endif 
 }
 
-#define KEYONCESTART(key,varname) static bool varname = false; if (glfwGetKey(m_window,key) == GLFW_PRESS) {if (!varname){varname = true;
-#define KEYONCEEND(varname) }}else{varname = false;}
-
+// CREATE AND SETUP EVERYTHING
 bool PhysX::onCreate(int a_argc, char* a_argv[]) {
 
 	Gizmos::create(SHRT_MAX * 2,SHRT_MAX * 2);
@@ -257,20 +287,27 @@ bool PhysX::onCreate(int a_argc, char* a_argv[]) {
 	return true;
 }
 
+// Update Variables
 float timer = 0.0f;
+float fShootTimer = 0.0f;
+int bulletnumber = 0; 
+
 void PhysX::onUpdate(float a_deltaTime) {
+
+	fShootTimer -= a_deltaTime;
+
+#ifdef  _USETIMESTEP
 	timer -= a_deltaTime;
 	if (timer <= 0.0f){
 		timer = 1/TIMESTEP;
+#endif
 		Utility::freeMovement( m_cameraMatrix, a_deltaTime, 50 );
 		Gizmos::clear();
 		Gizmos::addTransform( glm::mat4(1,0,0,0,0,1,0,0,0,0,1,0,0,1,0,1) );
 
-		static float fTimer = 0.0f;
-		static int bulletnumber = 0; 
 		if (glfwGetMouseButton(m_window,GLFW_MOUSE_BUTTON_1) == GLFW_PRESS) {
-			if (fTimer <= 0){
-				fTimer = 1/15.0f;
+			if (fShootTimer <= 0){
+				fShootTimer = 1/15.0f;
 				std::string bullet = "bullet_";
 				char buffer[32];
 				sprintf(buffer,"%i",bulletnumber++);
@@ -278,7 +315,6 @@ void PhysX::onUpdate(float a_deltaTime) {
 				m_Scene->AddSphere((char*)bullet.c_str(),physx::PxActorType::Enum::eRIGID_DYNAMIC,1000,1.0f,m_cameraMatrix[3].xyz,physx::PxQuat(0,0,0,0),m_cameraMatrix[2].xyz,50.0f);
 			}
 		}
-		fTimer -= a_deltaTime;
 
 		if (particleEmitter != nullptr){
 			particleEmitter->upDate(a_deltaTime); // Not really an update, more of a removal check
@@ -332,15 +368,18 @@ void PhysX::onUpdate(float a_deltaTime) {
 		KEYONCESTART(GLFW_KEY_F4,F4Once)
 		printf("All scene.\n");
 		SwitchLevel(ALL);
-		KEYONCEEND(F4Once);
+		KEYONCEEND(F4Once)
+
+#ifdef  _USETIMESTEP
 	}
+#endif
 }
 
 void PhysX::onDraw() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glm::mat4 viewMatrix = glm::inverse( m_cameraMatrix );
 		
-	m_Scene->draw();
+	m_Scene->draw(&(m_projectionMatrix * viewMatrix));
 
 	if (particleFluidEmitter != nullptr){ 
 		particleFluidEmitter->renderParticles();

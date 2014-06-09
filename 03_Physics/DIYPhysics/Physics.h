@@ -1,16 +1,17 @@
-#ifndef __PhysicsDIY_H_
-#define __PhysicsDIY_H_
+#pragma once
 
 #include "Application.h"
 #include <glm/glm.hpp>
+#include <vector>
 
-// Derived application class that wraps up all globals neatly
-class PhysicsDIY : public Application
-{
+class SpringJoint;
+class SceneManager;
+
+class Physics : public Application {
 public:
 
-	PhysicsDIY();
-	virtual ~PhysicsDIY();
+	Physics();
+	virtual ~Physics();
 
 protected:
 
@@ -21,10 +22,10 @@ protected:
 
 	glm::mat4	m_cameraMatrix;
 	glm::mat4	m_projectionMatrix;
-	
-	//!--TUTORIAL
 
-	//!--TUTORIAL
+	SceneManager *scene;
+	std::vector<SpringJoint*> springs;
+	bool pressed;
+
 };
 
-#endif // __PhysicsDIY_H_
