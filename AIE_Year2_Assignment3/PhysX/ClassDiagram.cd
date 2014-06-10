@@ -1,0 +1,109 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="ParticleEmitter">
+    <Position X="9.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAABAAgRCAAAAEAAACAAIAAAQAAAAAAgACQAAAAUAhA=</HashCode>
+      <FileName>ParticleEmmiter.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ParticleFluidEmitter">
+    <Position X="7.5" Y="2.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>IggBAAgQCBAAAEAAAABAIAAAQACAAAAgACSAIAAUAhA=</HashCode>
+      <FileName>ParticleFluidEmmiter.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PhysX">
+    <Position X="4" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AQGAAAIIAAAAAEAAAAAAAAQAAAAAAAAgAIAAAAgAAQA=</HashCode>
+      <FileName>PhysX.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MycollisionCallBack">
+    <Position X="5.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAEAAAAAAEAAAIAAAAAAAAAAAACABAAAAAAAAAAAA=</HashCode>
+      <FileName>PhysXScene.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="myAllocator">
+    <Position X="7.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAAAAAEAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>PhysXScene.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PhysXScene">
+    <Position X="11" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAgQAAAAAAAAA1AsAAIhQMgAIYIQAABITIBYBCEEgAA=</HashCode>
+      <FileName>PhysXScene.hpp</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Struct Name="FilterGroup">
+    <Position X="2.25" Y="0.5" Width="1.5" />
+    <NestedTypes>
+      <Enum Name="FilterGroup::Enum" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>PhysXScene.cpp</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>PhysXScene.cpp</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="Particle">
+    <Position X="0.5" Y="2.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAIAAAAAA=</HashCode>
+      <FileName>ParticleEmmiter.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="FluidParticle" Collapsed="true">
+    <Position X="4" Y="2.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAIAAAAAA=</HashCode>
+      <FileName>ParticleFluidEmmiter.h</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="RagdollNode">
+    <Position X="2.25" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAADAgAAAAAACAAAAAAAAEsAACQAAAAAAAAACA=</HashCode>
+      <FileName>PhysXScene.hpp</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Struct Name="ClothData">
+    <Position X="2.25" Y="5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAQAIAAAAECAAAAAAAAAAAAACgAQAAAAEAABAAgA=</HashCode>
+      <FileName>PhysXScene.hpp</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Typedef Name="JOINT" Collapsed="true">
+    <Position X="0.5" Y="5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>PhysXScene.hpp</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Typedef Name="ACTOR" Collapsed="true">
+    <Position X="0.5" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>PhysXScene.hpp</FileName>
+    </TypeIdentifier>
+  </Typedef>
+  <Enum Name="LEVELS">
+    <Position X="0.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAACAAAgAJAAAAIIAAAAAAAAACAAAAAAAAAAAAAA=</HashCode>
+      <FileName>PhysX.cpp</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>
