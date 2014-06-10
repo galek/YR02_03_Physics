@@ -15,7 +15,7 @@ Physics::~Physics(){}
 
 bool Physics::onCreate(int a_argc, char* a_argv[]) {
 	Gizmos::create();
-	m_cameraMatrix = glm::inverse( glm::lookAt(glm::vec3(10,10,10),glm::vec3(0,0,0), glm::vec3(0,1,0)) );
+	m_cameraMatrix = glm::inverse( glm::lookAt(glm::vec3(10,10,10),glm::vec3(0,15,0), glm::vec3(0,1,0)) );
 	m_projectionMatrix = glm::perspective(glm::pi<float>() * 0.25f, DEFAULT_SCREENWIDTH/(float)DEFAULT_SCREENHEIGHT, 0.1f, 1000.0f);
 	glClearColor(0.25f,0.25f,0.25f,1);
 	glEnable(GL_DEPTH_TEST);
@@ -33,18 +33,18 @@ bool Physics::onCreate(int a_argc, char* a_argv[]) {
 	for (int i = 0; i < size; i++) {
 		Actor *actor;
 
-		float x = i * 2.5f;
+		float y = 15 * (1.0f - i/(float)size);
 		if (i != 0) {
-			actor = new ActorDynamic(glm::vec3(x,15 * 1.0f - i/(float)size,0), 10.0f, glm::vec3(0));
+			actor = new ActorDynamic(glm::vec3(0,y,0), 10.0f, glm::vec3(0));
 		}else{ 
-			actor = new ActorStatic(glm::vec3(x,15 * 1.0f - i/(float)size,0));
+			actor = new ActorStatic(glm::vec3(0,y,0));
 		}
 
 		actor->AddShape(new Sphere(0.5f, glm::vec3(0), glm::vec4(1,0,0,1)));
 		scene->AddActor(actor);
 
 		if (i % size) {
-			springs.push_back(new SpringJoint(other, actor, 1.0f, 0.1f, 0.5f));
+			springs.push_back(new SpringJoint(other, actor, 1.0f, 0.1f, 1.0f));
 		}
 		other = actor;
 	}
@@ -68,8 +68,7 @@ void Physics::onUpdate(float a_deltaTime) {
 			scene->AddActor(actor);
 			pressed = true;
 		}
-	}
-	else {
+	} else {
 		pressed = false;
 	}
 
